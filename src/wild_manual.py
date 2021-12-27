@@ -2,14 +2,39 @@ import rngtool
 import cv2
 import time
 import json
+from xorshift import Xorshift
 
 config = json.load(open("config.json"))
 
+def reidentify():
+    t0 = int(input("input state[0] (state 0/1): 0x"),16)
+    t1 = int(input("input state[1] (state 0/1): 0x"),16)
+    state = [t0 >> 64, t0 & 0xFFFFFFFF, t1 >> 64, t1 & 0xFFFFFFFF]
+
+    observed_blinks, _, offset_time = rngtool.tracking_blink_manual(size = 20, reidentify=True)
+    reidentified_rng = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks)
+    
+    waituntil = time.perf_counter()
+    diff = round(waituntil-offset_time)+1
+    reidentified_rng.getNextRandSequence(diff)
+
+    state = reidentified_rng.getState()
+    print(hex(state[0]<<32|state[1]), hex(state[2]<<32|state[3]))
+
+    advances = 0
+
+    while True:
+        advances += 1
+        r = reidentified_rng.next()
+
+        waituntil += 1.018
+
+        print(f"advances:{advances}, blinks:{hex(r&0xF)}")        
+        
+        next_time = waituntil - time.perf_counter() or 0
+        time.sleep(next_time)
+
 def expr():
-    player_eye = cv2.imread(config["image"], cv2.IMREAD_GRAYSCALE)
-    if player_eye is None:
-        print("path is wrong")
-        return
     blinks, intervals, offset_time = rngtool.tracking_blink_manual()
     prng = rngtool.recov(blinks, intervals)
 
@@ -34,4 +59,7 @@ def expr():
 
 
 if __name__ == "__main__":
-    expr()
+    if input("Find State or Reidentify? (S/R): ") == "R":
+        reidentify()
+    else:
+        expr()

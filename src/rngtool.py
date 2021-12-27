@@ -102,39 +102,43 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, sysdvr 
     cv2.destroyAllWindows()
     return (blinks, intervals, offset_time)
 
-def tracking_blink_manual(size = 40)->Tuple[List[int],List[int],float]:
+def tracking_blink_manual(size = 40, reidentify = False)->Tuple[List[int],List[int],float]:
     """measuring the type and interval of player's blinks
 
     Returns:
         blinks:List[int],intervals:list[int],offset_time:float: [description]
     """
 
-    state = IDLE
     blinks = []
     intervals = []
     prev_time = 0
-
     offset_time = 0
+    while len(blinks)<size:
+        if not reidentify:
+            input()
+            time_counter = time.perf_counter()
+            print(f"Adv Since Last: {round((time_counter - prev_time)/1.018)} {(time_counter - prev_time)}")
 
-    while len(blinks)<size or state!=IDLE:
-        input()
-        time_counter = time.perf_counter()
-        print(f"Adv Since Last: {round((time_counter - prev_time)/1.018)} {(time_counter - prev_time)}")
+            if prev_time != 0 and time_counter - prev_time<0.7:
+                blinks[-1] = 1
+                print("double blink logged")
+            else:
+                blinks.append(0)
+                interval = (time_counter - prev_time)/1.018
+                interval_round = round(interval)
+                intervals.append(interval_round)
+                print("blink logged")
+                print(f"Intervals {len(intervals)}/{size}")
 
-        if prev_time != 0 and time_counter - prev_time<0.7:
-            blinks[-1] = 1
-            print("double blink logged")
+                if len(intervals)==size:
+                    offset_time = time_counter
+                prev_time = time_counter
         else:
-            blinks.append(0)
-            interval = (time_counter - prev_time)/1.018
-            interval_round = round(interval)
-            intervals.append(interval_round)
-            print("blink logged")
-            print(f"Intervals {len(intervals)}/{size}")
-
+            blinks.append(int(input("Blink Type (0 = single, 1 = double): ")))
+            print(f"Blinks {len(blinks)}/{size}")
+            time_counter = time.perf_counter()
             if len(intervals)==size:
                 offset_time = time_counter
-            prev_time = time_counter
 
 
 
