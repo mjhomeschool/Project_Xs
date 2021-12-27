@@ -4,7 +4,7 @@ import time
 import json
 from xorshift import Xorshift
 
-config = json.load(open("config.json"))
+config = json.load(open("config_cave.json"))
 
 def expr():
     player_eye = cv2.imread(config["image"], cv2.IMREAD_GRAYSCALE)
