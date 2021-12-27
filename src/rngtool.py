@@ -163,6 +163,7 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, sysdvr = Fal
     intervals = []
     prev_roi = None
     prev_time = time.perf_counter()
+    w, h = eye.shape[::-1]
 
 
     # 瞬きの観測
@@ -176,19 +177,30 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, sysdvr = Fal
         prev_roi = roi
 
         res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
-        _, match, _, _ = cv2.minMaxLoc(res)
+        _, match, _, max_loc = cv2.minMaxLoc(res)
 
         if 0.4<match<0.85:
+            cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), 255, 2)
             if state==IDLE:
                 interval = (time_counter - prev_time)
-                print(interval)
                 intervals.append(interval)
+                print(f"Intervals {len(intervals)}/{size}")
                 state = SINGLE
                 prev_time = time_counter
             elif state==SINGLE:
                 pass
+        else:
+            max_loc = (max_loc[0] + roi_x,max_loc[1] + roi_y)
+            bottom_right = (max_loc[0] + w, max_loc[1] + h)
+            cv2.rectangle(frame,max_loc, bottom_right, 255, 2)
         if state!=IDLE and time_counter - prev_time>0.7:
             state = IDLE
+        
+        cv2.imshow("view", frame)
+        keypress = cv2.waitKey(1)
+        if keypress == ord('q'):
+            cv2.destroyAllWindows()
+            exit()
     cv2.destroyAllWindows()
     video.release()
     return intervals

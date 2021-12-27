@@ -2,7 +2,10 @@ import rngtool
 import calc
 import cv2
 import time
+import json
 from xorshift import Xorshift
+
+config = json.load(open("config.json"))
 
 def randrange(r,mi,ma):
     t = (r & 0x7fffff) / 8388607.0
@@ -25,15 +28,14 @@ def generate_dangerintervals_list(k):
     print(lst[::-1])
 
 def expr():
-    munch_eye = cv2.imread("./munchlax/eye.png", cv2.IMREAD_GRAYSCALE)
+    munch_eye = cv2.imread(config["image"], cv2.IMREAD_GRAYSCALE)
     if munch_eye is None:
         print("path is wrong")
         return
-    gombe_intervals = rngtool.tracking_poke_blink(munch_eye, 730, 670, 50, 60)
+    gombe_intervals = rngtool.tracking_poke_blink(munch_eye, *config["view"], size=60, sysdvr=config["SysDVR"])
 
     interval_prng = rngtool.recovByMunchlax(gombe_intervals)
     state = interval_prng.getState()
-    print(hex(state[0]<<32|state[1]), hex(state[2]<<32|state[3]))
 
     #timecounter reset
     advances = 0
@@ -41,6 +43,8 @@ def expr():
     id_prng.getNextRandSequence(1)
     
     waituntil = time.perf_counter()
+    ts = time.time()
+    print(hex(state[0]<<32|state[1]), hex(state[2]<<32|state[3]), ts)
     #ID予測開始
     while True:
         advances += 1
