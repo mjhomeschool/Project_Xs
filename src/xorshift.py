@@ -37,13 +37,13 @@ class Xorshift(object):
 
         return self.w
 
-    def range(mi,ma):
+    def range(self,mi,ma):
         return self.next() % (ma-mi) + min
 
-    def getNextRandSequence(length):
+    def getNextRandSequence(self,length):
         return [self.next() for _ in range(length)]
 
-    def getPrevRandSequence(length):
+    def getPrevRandSequence(self,length):
         return [self.prev() for _ in range(length)]
 
     def getState(self):

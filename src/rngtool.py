@@ -16,7 +16,7 @@ def randrange(r,mi,ma):
     t = (r & 0x7fffff) / 8388607.0
     return t * mi + (1.0 - t) * ma
 
-def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40)->Tuple[List[int],List[int],float]:
+def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, sysdvr = False)->Tuple[List[int],List[int],float]:
     """measuring the type and interval of player's blinks
 
     Returns:
@@ -25,15 +25,20 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40)->Tuple[
 
     eye = img
 
-    video = cv2.VideoCapture(0,cv2.CAP_DSHOW)
-    video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
-    video.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
-    video.set(cv2.CAP_PROP_BUFFERSIZE,1)
+    if sysdvr:
+        from windowcapture import WindowCapture
+        video = WindowCapture("SysDVR-Client [PID ")
+    else:
+        video = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+        video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
+        video.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
+        video.set(cv2.CAP_PROP_BUFFERSIZE,1)
 
     state = IDLE
     blinks = []
     intervals = []
     prev_time = 0
+    w, h = eye.shape[::-1]
 
     prev_roi = None
     debug_txt = ""
@@ -50,17 +55,18 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40)->Tuple[
 
         prev_roi = roi
         res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
-        _, match, _, _ = cv2.minMaxLoc(res)
-
-        cv2.imshow("",roi)
-        cv2.waitKey(1)
+        _, match, _, max_loc = cv2.minMaxLoc(res)
 
         if 0.01<match<th:
+            cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), 255, 2)
             if state==IDLE:
                 blinks.append(0)
                 interval = (time_counter - prev_time)/1.018
                 interval_round = round(interval)
                 intervals.append(interval_round)
+                print(f"Adv Since Last: {round((time_counter - prev_time)/1.018)} {(time_counter - prev_time)}")
+                print("blink logged")
+                print(f"Intervals {len(intervals)}/{size}")
 
                 if len(intervals)==size:
                     offset_time = time_counter
@@ -76,16 +82,65 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40)->Tuple[
                     blinks[-1] = 1
                     debug_txt = debug_txt+"d"
                     state = DOUBLE
+                    print("double blink logged")
             elif state==DOUBLE:
                 pass
+        else:
+            max_loc = (max_loc[0] + roi_x,max_loc[1] + roi_y)
+            bottom_right = (max_loc[0] + w, max_loc[1] + h)
+            cv2.rectangle(frame,max_loc, bottom_right, 255, 2)
+        
+        cv2.imshow("view", frame)
+        keypress = cv2.waitKey(1)
+        if keypress == ord('q'):
+            cv2.destroyAllWindows()
+            exit()
 
         if state!=IDLE and time_counter - prev_time>0.7:
             state = IDLE
-            print(debug_txt)
+            # print(debug_txt)
     cv2.destroyAllWindows()
     return (blinks, intervals, offset_time)
 
-def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60)->Tuple[List[int],List[int],float]:
+def tracking_blink_manual(size = 40)->Tuple[List[int],List[int],float]:
+    """measuring the type and interval of player's blinks
+
+    Returns:
+        blinks:List[int],intervals:list[int],offset_time:float: [description]
+    """
+
+    state = IDLE
+    blinks = []
+    intervals = []
+    prev_time = 0
+
+    offset_time = 0
+
+    while len(blinks)<size or state!=IDLE:
+        input()
+        time_counter = time.perf_counter()
+        print(f"Adv Since Last: {round((time_counter - prev_time)/1.018)} {(time_counter - prev_time)}")
+
+        if prev_time != 0 and time_counter - prev_time<0.7:
+            blinks[-1] = 1
+            print("double blink logged")
+        else:
+            blinks.append(0)
+            interval = (time_counter - prev_time)/1.018
+            interval_round = round(interval)
+            intervals.append(interval_round)
+            print("blink logged")
+            print(f"Intervals {len(intervals)}/{size}")
+
+            if len(intervals)==size:
+                offset_time = time_counter
+            prev_time = time_counter
+
+
+
+    return (blinks, intervals, offset_time)
+
+def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, sysdvr = False)->Tuple[List[int],List[int],float]:
     """measuring the type and interval of pokemon's blinks
 
     Returns:
@@ -94,10 +149,14 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60)->Tuple[List[
 
     eye = img
     
-    video = cv2.VideoCapture(0,cv2.CAP_DSHOW)
-    video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
-    video.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
-    video.set(cv2.CAP_PROP_BUFFERSIZE,1)
+    if sysdvr:
+        from windowcapture import WindowCapture
+        video = WindowCapture("SysDVR-Client [PID ")
+    else:
+        video = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+        video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
+        video.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
+        video.set(cv2.CAP_PROP_BUFFERSIZE,1)
 
     state = IDLE
 

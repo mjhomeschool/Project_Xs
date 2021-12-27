@@ -1,15 +1,17 @@
 import rngtool
-import calc
 import cv2
 import time
+import json
 from xorshift import Xorshift
 
+config = json.load(open("config.json"))
+
 def expr():
-    player_eye = cv2.imread("./trainer/ruins/eye.png", cv2.IMREAD_GRAYSCALE)
+    player_eye = cv2.imread(config["image"], cv2.IMREAD_GRAYSCALE)
     if player_eye is None:
         print("path is wrong")
         return
-    blinks, intervals, offset_time = rngtool.tracking_blink(player_eye, 910, 485, 50, 60)
+    blinks, intervals, offset_time = rngtool.tracking_blink(player_eye, *config["view"], sysdvr=config["SysDVR"])
     prng = rngtool.recov(blinks, intervals)
 
     waituntil = time.perf_counter()
@@ -19,18 +21,11 @@ def expr():
     state = prng.getState()
     print(hex(state[0]<<32|state[1]), hex(state[2]<<32|state[3]))
 
-    #timecounter reset
-    advances = 0
-    wild_prng = Xorshift(*prng.getState())
-    wild_prng.getNextRandSequence(1)
-
     advances = 0
 
-    for i in range(100):
+    for _ in range(1000):
         advances += 1
         r = prng.next()
-        wild_r = wild_prng.next()
-
         waituntil += 1.018
 
         print(f"advances:{advances}, blinks:{hex(r&0xF)}")        
@@ -99,5 +94,4 @@ def reidentify():
         time.sleep(next_time)
 
 if __name__ == "__main__":
-    #firstspecify()
-    reidentify()
+    expr()
