@@ -1,6 +1,6 @@
 {
     "SysDVR": true,
-    "image": "./trainer/cave/eye.png",
+    "image": "./trainer/ruins/eye.png",
     "view": [610, 330, 30, 30],
-    "reidentify": "0x37a35d28 0x488e6831 0xb7f56519 0x79a3b387"
+    "reidentify": ""
 }
