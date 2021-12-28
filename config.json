@@ -1,5 +1,6 @@
 {
     "SysDVR": true,
     "image": "./munchlax/eye.png",
-    "view": [470, 430, 50, 60]
+    "view": [470, 430, 50, 60],
+    "reidentify": ""
 }

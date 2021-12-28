@@ -89,7 +89,6 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, sysdvr 
             max_loc = (max_loc[0] + roi_x,max_loc[1] + roi_y)
             bottom_right = (max_loc[0] + w, max_loc[1] + h)
             cv2.rectangle(frame,max_loc, bottom_right, 255, 2)
-        
         cv2.imshow("view", frame)
         keypress = cv2.waitKey(1)
         if keypress == ord('q'):

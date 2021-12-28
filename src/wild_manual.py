@@ -1,10 +1,6 @@
 import rngtool
-import cv2
 import time
-import json
 from xorshift import Xorshift
-
-config = json.load(open("config.json"))
 
 def reidentify():
     t0 = int(input("input state[0] (state 0/1): 0x"),16)
