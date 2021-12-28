@@ -4,7 +4,7 @@ import time
 import json
 from xorshift import Xorshift
 
-config = json.load(open("config_cave.json"))
+config = json.load(open("config_wild.json"))
 
 def expr():
     player_eye = cv2.imread(config["image"], cv2.IMREAD_GRAYSCALE)
@@ -70,9 +70,7 @@ def reidentify():
         time.sleep(next_time)
 
 if __name__ == "__main__":
-    # inp = input("Find State or Reidentify? (S/R): ")
-    inp = "R"
-    if inp == "R":
+    if config["reidentify"] != "":
         reidentify()
     else:
         expr()
