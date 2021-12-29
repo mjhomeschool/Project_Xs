@@ -13,7 +13,7 @@ class WindowCapture:
         self.offset_x = 0
         self.offset_y = 0
 
-        # a string contained in the window title, used to find windows who's name is not constant (pid of sysdvr changes)
+        # a string contained in the window title, used to find windows who's name is not constant (pid of MonitorWindow changes)
         self.partial_window_title = partial_window_title
         # find the handle for the window we want to capture
         hwnds = []

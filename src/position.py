@@ -4,9 +4,9 @@ import json
 
 config = json.load(open("config.json"))
 
-if config["SysDVR"]:
+if config["MonitorWindow"]:
     from windowcapture import WindowCapture
-    video = WindowCapture("SysDVR-Client [PID ")
+    video = WindowCapture(config["WindowPrefix"])
 else:
     video = cv2.VideoCapture(0,cv2.CAP_DSHOW)
     video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)

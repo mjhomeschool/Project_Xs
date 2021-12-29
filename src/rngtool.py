@@ -16,7 +16,7 @@ def randrange(r,mi,ma):
     t = (r & 0x7fffff) / 8388607.0
     return t * mi + (1.0 - t) * ma
 
-def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, sysdvr = False)->Tuple[List[int],List[int],float]:
+def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, MonitorWindow = False, WindowPrefix = "SysDVR-Client [PID ")->Tuple[List[int],List[int],float]:
     """measuring the type and interval of player's blinks
 
     Returns:
@@ -25,9 +25,9 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, sysdvr 
 
     eye = img
 
-    if sysdvr:
+    if MonitorWindow:
         from windowcapture import WindowCapture
-        video = WindowCapture("SysDVR-Client [PID ")
+        video = WindowCapture(WindowPrefix)
     else:
         video = cv2.VideoCapture(0,cv2.CAP_DSHOW)
         video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
@@ -143,7 +143,7 @@ def tracking_blink_manual(size = 40, reidentify = False)->Tuple[List[int],List[i
 
     return (blinks, intervals, offset_time)
 
-def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, sysdvr = False)->Tuple[List[int],List[int],float]:
+def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, MonitorWindow = False, WindowPrefix = "SysDVR-Client [PID ")->Tuple[List[int],List[int],float]:
     """measuring the type and interval of pokemon's blinks
 
     Returns:
@@ -152,9 +152,9 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, sysdvr = Fal
 
     eye = img
     
-    if sysdvr:
+    if MonitorWindow:
         from windowcapture import WindowCapture
-        video = WindowCapture("SysDVR-Client [PID ")
+        video = WindowCapture(WindowPrefix)
     else:
         video = cv2.VideoCapture(0,cv2.CAP_DSHOW)
         video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)

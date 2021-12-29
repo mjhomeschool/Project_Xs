@@ -1,5 +1,6 @@
 {
-    "SysDVR": true,
+    "MonitorWindow": true,
+    "WindowPrefix": "SysDVR-Client [PID ",
     "image": "./munchlax/eye.png",
     "view": [470, 430, 50, 60],
     "reidentify": ""

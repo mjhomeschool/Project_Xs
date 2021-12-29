@@ -32,7 +32,7 @@ def expr():
     if munch_eye is None:
         print("path is wrong")
         return
-    gombe_intervals = rngtool.tracking_poke_blink(munch_eye, *config["view"], size=60, sysdvr=config["SysDVR"])
+    gombe_intervals = rngtool.tracking_poke_blink(munch_eye, *config["view"], size=60, MonitorWindow=config["MonitorWindow"], WindowPrefix=config["WindowPrefix"])
 
     interval_prng = rngtool.recovByMunchlax(gombe_intervals)
     state = interval_prng.getState()
