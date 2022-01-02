@@ -16,7 +16,7 @@ def randrange(r,mi,ma):
     t = (r & 0x7fffff) / 8388607.0
     return t * mi + (1.0 - t) * ma
 
-def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, MonitorWindow = False, WindowPrefix = "SysDVR-Client [PID ")->Tuple[List[int],List[int],float]:
+def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, MonitorWindow = False, WindowPrefix = "SysDVR-Client [PID ", tk_window = None)->Tuple[List[int],List[int],float]:
     """measuring the type and interval of player's blinks
 
     Returns:
@@ -24,6 +24,7 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
     """
 
     eye = img
+    last_frame_tk = None
 
     if MonitorWindow:
         from windowcapture import WindowCapture
@@ -47,6 +48,12 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
 
     # 瞬きの観測
     while len(blinks)<size or state!=IDLE:
+        if tk_window != None:
+            if not tk_window.monitoring and not tk_window.reidentifying:
+                tk_window.progress['text'] = "0/0"
+                tk_window.monitor_tk_buffer = None
+                tk_window.monitor_tk = None
+                exit()
         _, frame = video.read()
         time_counter = time.perf_counter()
         roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)
@@ -57,6 +64,7 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
         res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
         _, match, _, max_loc = cv2.minMaxLoc(res)
 
+        cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), (0,0,255), 2)
         if 0.01<match<th:
             cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), 255, 2)
             if state==IDLE:
@@ -64,9 +72,11 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
                 interval = (time_counter - prev_time)/1.018
                 interval_round = round(interval)
                 intervals.append(interval_round)
-                print(f"Adv Since Last: {round((time_counter - prev_time)/1.018)} {(time_counter - prev_time)}")
+                print(f"Adv Since Last: {round((time_counter - prev_time)/1.018)} {(time_counter - prev_time)/1.018}")
                 print("blink logged")
                 print(f"Intervals {len(intervals)}/{size}")
+                if tk_window != None:
+                    tk_window.progress['text'] = f"{len(intervals)}/{size}"
 
                 if len(intervals)==size:
                     offset_time = time_counter
@@ -89,16 +99,28 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
             max_loc = (max_loc[0] + roi_x,max_loc[1] + roi_y)
             bottom_right = (max_loc[0] + w, max_loc[1] + h)
             cv2.rectangle(frame,max_loc, bottom_right, 255, 2)
-        cv2.imshow("view", frame)
-        keypress = cv2.waitKey(1)
-        if keypress == ord('q'):
-            cv2.destroyAllWindows()
-            exit()
+        if tk_window == None:
+            cv2.imshow("view", frame)
+            keypress = cv2.waitKey(1)
+            if keypress == ord('q'):
+                cv2.destroyAllWindows()
+                exit()
+        else:
+            frame_tk = tk_window.cv_image_to_tk(frame)
+            tk_window.monitor_tk_buffer = last_frame_tk
+            tk_window.monitor_display_buffer['image'] = tk_window.monitor_tk_buffer
+            tk_window.monitor_tk = frame_tk
+            tk_window.monitor_display['image'] = tk_window.monitor_tk
+            last_frame_tk = frame_tk
 
         if state!=IDLE and time_counter - prev_time>0.7:
             state = IDLE
-            # print(debug_txt)
-    cv2.destroyAllWindows()
+    if tk_window == None:
+        cv2.destroyAllWindows()
+    else:
+        tk_window.progress['text'] = "0/0"
+        frame_tk = None
+        last_frame_tk = None
     return (blinks, intervals, offset_time)
 
 def tracking_blink_manual(size = 40, reidentify = False)->Tuple[List[int],List[int],float]:
@@ -237,7 +259,7 @@ def recov(blinks:List[int],rawintervals:List[int])->Xorshift:
     result.getNextRandSequence(advanced_frame)
     return result
 
-def reidentifyByBlinks(rng:Xorshift, observed_blinks:List[int], npc = 0, search_max=10**6, search_min=0)->Xorshift:
+def reidentifyByBlinks(rng:Xorshift, observed_blinks:List[int], npc = 0, search_max=10**6, search_min=0, return_advance=False)->Xorshift:
     if search_max<search_min:
         search_min, search_max = search_max, search_min
     search_range = search_max - search_min
@@ -279,9 +301,12 @@ def reidentifyByBlinks(rng:Xorshift, observed_blinks:List[int], npc = 0, search_
             if search_blinks==blinks and search_min <= idx:
                 print(f"found  at advances:{idx}, d={d}")
                 result.getNextRandSequence(idx)
+                if return_advance:
+                    return result, idx
                 return result
 
     return None
+
 
 def recovByMunchlax(rawintervals:List[float])->Xorshift:
     """Recover the xorshift from the interval of Munchlax blinks.

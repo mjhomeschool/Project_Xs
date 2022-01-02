@@ -1,0 +1,12 @@
+{
+    "MonitorWindow": true,
+    "WindowPrefix": "SysDVR-Client [PID ",
+    "image": "images\\home\\eye.png",
+    "view": [
+        610,
+        347,
+        30,
+        30
+    ],
+    "thresh": 0.9
+}
