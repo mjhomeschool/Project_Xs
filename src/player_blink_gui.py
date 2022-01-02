@@ -56,10 +56,14 @@ class Application(tk.Frame):
 
         self.eye_display = ttk.Label(self)
         self.eye_display.grid(column=1,row=1)
+
+        self.prefix_input = ttk.Entry(self)
+        self.prefix_input.grid(column=1,row=2)
+
         self.monitor_display_buffer = ttk.Label(self)
-        self.monitor_display_buffer.grid(column=1,row=2,rowspan=64)
+        self.monitor_display_buffer.grid(column=1,row=3,rowspan=64)
         self.monitor_display = ttk.Label(self)
-        self.monitor_display.grid(column=1,row=2,rowspan=64)
+        self.monitor_display.grid(column=1,row=3,rowspan=64)
 
         self.monitor_blink_button = ttk.Button(self, text="Monitor Blinks", command=self.monitor_blinks)
         self.monitor_blink_button.grid(column=3,row=0)
@@ -161,6 +165,8 @@ class Application(tk.Frame):
         self.player_eye = cv2.imread(self.config_json["image"], cv2.IMREAD_GRAYSCALE)
         self.player_eye_tk = self.cv_image_to_tk(self.player_eye)
         self.eye_display['image'] = self.player_eye_tk
+        self.prefix_input.delete(0, tk.END)
+        self.prefix_input.insert(0, self.config_json["WindowPrefix"])
 
     def stop_tracking(self):
         self.tracking = False
@@ -327,6 +333,7 @@ class Application(tk.Frame):
     def after_task(self):
         self.config_json["view"] = [int(self.pos_x.get()),int(self.pos_y.get()),int(self.pos_w.get()),int(self.pos_h.get())]
         self.config_json["thresh"] = float(self.pos_th.get())
+        self.config_json["WindowPrefix"] = self.prefix_input.get()
         self.adv['text'] = self.advances
         self.after(100,self.after_task)
 
