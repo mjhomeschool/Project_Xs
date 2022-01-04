@@ -1,18 +1,18 @@
 import rngtool
-import calc
 import cv2
 import time
+import json
 from xorshift import Xorshift
 import heapq
 
-imgpath = "./trainer/mtcoronet/eye.png"
+config = json.load(open("./configs/config_mt_coronet.json"))
 
 def firstspecify():
-    player_eye = cv2.imread(imgpath, cv2.IMREAD_GRAYSCALE)
+    player_eye = cv2.imread(config["image"], cv2.IMREAD_GRAYSCALE)
     if player_eye is None:
         print("path is wrong")
         return
-    blinks, intervals, offset_time = rngtool.tracking_blink(player_eye, 930, 510, 30, 35)
+    blinks, intervals, offset_time = rngtool.tracking_blink(player_eye, *config["view"], MonitorWindow=config["MonitorWindow"], WindowPrefix=config["WindowPrefix"])
     prng = rngtool.recov(blinks, intervals)
 
     waituntil = time.perf_counter()
@@ -28,12 +28,12 @@ def firstspecify():
 def reidentify():
     print("input xorshift state(state[0] state[1] state[2] state[3])")
     state = [int(x,0) for x in input().split()]
-    player_eye = cv2.imread(imgpath, cv2.IMREAD_GRAYSCALE)
+    player_eye = cv2.imread(config["image"], cv2.IMREAD_GRAYSCALE)
     if player_eye is None:
         print("path is wrong")
         return
 
-    observed_blinks, _, offset_time = rngtool.tracking_blink(player_eye, 930,510,30,35,size=20)
+    observed_blinks, _, offset_time = rngtool.tracking_blink(player_eye, *config["view"], MonitorWindow=config["MonitorWindow"], WindowPrefix=config["WindowPrefix"],size=20)
     reidentified_rng = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks)
     if reidentified_rng is None:
         print("couldn't reidentify state.")
@@ -42,7 +42,7 @@ def reidentify():
     waituntil = time.perf_counter()
     diff = int(-(-(waituntil-offset_time)//1))
     print(diff, waituntil-offset_time)
-    reidentified_rng.advances(max(diff,0))
+    reidentified_rng.advance(max(diff,0))
 
     state = reidentified_rng.getState()
     print("state(64bit 64bit)")
@@ -71,14 +71,16 @@ def reidentify():
         print(f"advances:{advances}, blink:{hex(r&0xF)}")
 
 def stationary_timeline():
-    print("input xorshift state(state[0] state[1] state[2] state[3])")
-    state = [int(x,0) for x in input().split()]
-    player_eye = cv2.imread(imgpath, cv2.IMREAD_GRAYSCALE)
+    # print("input xorshift state(state[0] state[1] state[2] state[3])")
+
+    # state = [int(x,0) for x in input().split()]
+    state = [0x4886CC50, 0x87EC1551, 0xC7F5D167, 0x54F998A8]
+    player_eye = cv2.imread(config["image"], cv2.IMREAD_GRAYSCALE)
     if player_eye is None:
         print("path is wrong")
         return
 
-    observed_blinks, _, offset_time = rngtool.tracking_blink(player_eye, 930,510,30,35,size=20)
+    observed_blinks, _, offset_time = rngtool.tracking_blink(player_eye, *config["view"], MonitorWindow=config["MonitorWindow"], WindowPrefix=config["WindowPrefix"],th=config["thresh"],size=20)
     reidentified_rng = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks)
     if reidentified_rng is None:
         print("couldn't reidentify state.")
@@ -86,7 +88,7 @@ def stationary_timeline():
 
     waituntil = time.perf_counter()
     diff = int(-(-(waituntil-offset_time)//1))
-    reidentified_rng.advances(max(diff,0))
+    reidentified_rng.advance(max(diff,0))
 
     state = reidentified_rng.getState()
     print("state(64bit 64bit)")
@@ -119,7 +121,6 @@ def stationary_timeline():
     queue = []
     heapq.heappush(queue, (waituntil+1.017,0))
 
-    #blink_int = reidentified_rng.range(100.0, 370.0)/30 - 0.048
     blink_int = reidentified_rng.rangefloat(100.0, 370.0)/30 - 0.048
 
     heapq.heappush(queue, (waituntil+blink_int,1))
@@ -135,7 +136,6 @@ def stationary_timeline():
             print(f"advances:{advances}, blink:{hex(r&0xF)}")
             heapq.heappush(queue, (w+1.017, 0))
         else:
-            #blink_int = reidentified_rng.range(100.0, 370.0)/30 - 0.048
             blink_int = reidentified_rng.rangefloat(100.0, 370.0)/30 - 0.048
 
             heapq.heappush(queue, (w+blink_int, 1))

@@ -1,0 +1,12 @@
+{
+    "MonitorWindow": true,
+    "WindowPrefix": "SysDVR-Client [PID ",
+    "image": "./images/spear_pillar/eye.png",
+    "view": [
+        621,
+        346,
+        17,
+        19
+    ],
+    "thresh": 0.75
+}

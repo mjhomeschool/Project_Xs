@@ -4,7 +4,7 @@ import time
 import json
 from xorshift import Xorshift
 
-config = json.load(open("config_wild.json"))
+config = json.load(open("./configs/config_wild.json"))
 
 def expr():
     player_eye = cv2.imread(config["image"], cv2.IMREAD_GRAYSCALE)
@@ -19,6 +19,7 @@ def expr():
     prng.getNextRandSequence(diff)
 
     state = prng.getState()
+    print("state(64bit 64bit)")
     print(hex(state[0]<<32|state[1]), hex(state[2]<<32|state[3]))
     print("state(32bit 32bit 32bit 32bit)")
     print(*[hex(s) for s in state])
@@ -48,7 +49,7 @@ def reidentify():
     
     waituntil = time.perf_counter()
     diff = int(-(-(waituntil-offset_time)//1))
-    reidentified_rng.advances(max(diff,0))
+    reidentified_rng.advance(max(diff,0))
 
     state = reidentified_rng.getState()
     print("state(64bit 64bit)")

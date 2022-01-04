@@ -13,7 +13,7 @@ def splitstate(state:int):
 
 def main():
     prng = Xorshift(0x12,0x34,0x56,0x00)
-    prng.advances(1000)
+    prng.advance(1000)
     for i in range(10):
         print(*list(map(hex,prng.getState())))
         prng.prev()

@@ -5,7 +5,7 @@ import time
 import json
 from xorshift import Xorshift
 
-config = json.load(open("config_munchlax.json"))
+config = json.load(open("./configs/config_munchlax.json"))
 
 def randrange(r,mi,ma):
     t = (r & 0x7fffff) / 8388607.0
