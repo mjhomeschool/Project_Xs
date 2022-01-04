@@ -47,8 +47,8 @@ def reidentify():
     reidentified_rng = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks)
     
     waituntil = time.perf_counter()
-    diff = round(waituntil-offset_time)+1
-    reidentified_rng.getNextRandSequence(diff)
+    diff = int(-(-(waituntil-offset_time)//1))
+    reidentified_rng.advances(max(diff,0))
 
     state = reidentified_rng.getState()
     print("state(64bit 64bit)")

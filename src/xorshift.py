@@ -40,6 +40,42 @@ class Xorshift(object):
     def range(self,mi,ma):
         return self.next() % (ma-mi) + min
 
+    def advance(self,length:int):
+        self.getNextRandSequence(length)
+
+    def range(self,mi:int,ma:int)->int:
+        """generate random integer value in [mi,ma)
+
+        Args:
+            mi ([int]): minimum
+            ma ([int]): maximam
+
+        Returns:
+            [int]: random integer value
+        """
+        return self.next() % (ma-mi) + min
+
+    def float(self)->float:
+        """generate random value in [0,1]
+
+        Returns:
+            float: random value
+        """
+        return (self.next() & 0x7fffff) / 8388607.0
+
+    def rangefloat(self,mi:float,ma:float)->float:
+        """generate random value in [mi,ma]
+
+        Args:
+            mi (float): minimum
+            ma (float): maximam
+
+        Returns:
+            [type]: [description]
+        """
+        t = self.float()
+        return t * mi + (1-t) * ma
+
     def getNextRandSequence(self,length):
         return [self.next() for _ in range(length)]
 
