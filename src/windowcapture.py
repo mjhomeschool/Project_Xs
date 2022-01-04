@@ -3,7 +3,7 @@ import win32gui, win32ui, win32con
 
 # Class to monitor a window
 class WindowCapture:
-    def __init__(self, partial_window_title):
+    def __init__(self, partial_window_title, crop):
         # set up variables
         self.w = 0
         self.h = 0
@@ -34,6 +34,8 @@ class WindowCapture:
         self.h = self.h - titlebar_pixels - border_pixels
         self.cropped_x = border_pixels
         self.cropped_y = titlebar_pixels
+        if crop is not None and crop != [0,0,0,0]:
+            self.cropped_x,self.cropped_y,self.w,self.h = crop
 
         # set the cropped coordinates offset so we can translate screenshot images into actual screen positions
         self.offset_x = window_rect[0] + self.cropped_x

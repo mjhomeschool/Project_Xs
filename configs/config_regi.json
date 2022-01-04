@@ -11,5 +11,6 @@
     "thresh": 0.75,
     "white_delay": 3.0,
     "advance_delay": 1,
-    "advance_del": 3
+    "advance_del": 3,
+    "crop": [0,0,0,0]
 }

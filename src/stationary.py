@@ -33,7 +33,7 @@ def reidentify():
         print("path is wrong")
         return
 
-    observed_blinks, _, offset_time = rngtool.tracking_blink(player_eye, *config["view"], MonitorWindow=config["MonitorWindow"], WindowPrefix=config["WindowPrefix"],size=20)
+    observed_blinks, _, offset_time = rngtool.tracking_blink(player_eye, *config["view"], MonitorWindow=config["MonitorWindow"], WindowPrefix=config["WindowPrefix"], crop=config["crop"], size=20)
     reidentified_rng = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks)
     if reidentified_rng is None:
         print("couldn't reidentify state.")
@@ -80,7 +80,7 @@ def stationary_timeline():
         print("path is wrong")
         return
 
-    observed_blinks, _, offset_time = rngtool.tracking_blink(player_eye, *config["view"], MonitorWindow=config["MonitorWindow"], WindowPrefix=config["WindowPrefix"],th=config["thresh"],size=20)
+    observed_blinks, _, offset_time = rngtool.tracking_blink(player_eye, *config["view"], MonitorWindow=config["MonitorWindow"], WindowPrefix=config["WindowPrefix"], crop=config["crop"], th=config["thresh"],size=20)
     reidentified_rng = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks)
     if reidentified_rng is None:
         print("couldn't reidentify state.")

@@ -224,7 +224,7 @@ class Application(tk.Frame):
     
     def monitoring_work(self):
         self.tracking = False
-        blinks, intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], tk_window=self, th=self.config_json["thresh"])
+        blinks, intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], tk_window=self, th=self.config_json["thresh"])
         prng = rngtool.recov(blinks, intervals)
 
         self.monitor_blink_button['text'] = "Monitor Blinks"
@@ -407,7 +407,7 @@ class Application(tk.Frame):
 
         if self.config_json["MonitorWindow"]:
             from windowcapture import WindowCapture
-            video = WindowCapture(self.config_json["WindowPrefix"])
+            video = WindowCapture(self.config_json["WindowPrefix"],self.config_json["crop"])
         else:
             video = cv2.VideoCapture(0,cv2.CAP_DSHOW)
             video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
