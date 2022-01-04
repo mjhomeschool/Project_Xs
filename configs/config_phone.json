@@ -1,0 +1,15 @@
+{
+    "MonitorWindow": true,
+    "WindowPrefix": "LM-Q",
+    "image": "images\\phone\\eye.png",
+    "view": [
+        392,
+        150,
+        45,
+        55
+    ],
+    "thresh": 0.8,
+    "white_delay": 0.0,
+    "advance_delay": 0,
+    "advance_del": 0
+}

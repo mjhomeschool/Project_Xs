@@ -15,6 +15,7 @@ import json
 import os.path
 import heapq
 from PIL import Image, ImageTk
+from stationary import reidentify
 from xorshift import Xorshift
 
 class Application(tk.Frame):
@@ -31,7 +32,9 @@ class Application(tk.Frame):
             "WindowPrefix": "SysDVR-Client [PID ",
             "image": "./images/cave/eye.png",
             "view": [0, 0, 0, 0],
-            "thresh": 0.9
+            "thresh": 0.9,
+            "white_delay": 0.0,
+            "advance_delay": 0
         }
         self.pack()
         self.create_widgets()
@@ -90,6 +93,8 @@ class Application(tk.Frame):
         ttk.Label(self,text="W").grid(column=4,row=3)
         ttk.Label(self,text="H").grid(column=4,row=4)
         ttk.Label(self,text="Th").grid(column=4,row=5)
+        ttk.Label(self,text="whi del").grid(column=4,row=6)
+        ttk.Label(self,text="adv del").grid(column=4,row=7)
 
         self.pos_x = tk.Spinbox(self, from_= 0, to = 99999, width = 5)
         self.pos_x.grid(column=5,row=1)
@@ -101,12 +106,16 @@ class Application(tk.Frame):
         self.pos_h.grid(column=5,row=4)
         self.pos_th = tk.Spinbox(self, from_= 0, to = 1, width = 5, increment=0.1)
         self.pos_th.grid(column=5,row=5)
+        self.whi_del = tk.Spinbox(self, from_= 0, to = 5, width = 5, increment=0.1)
+        self.whi_del.grid(column=5,row=6)
+        self.adv_del = tk.Spinbox(self, from_= 0, to = 5, width = 5, increment=1)
+        self.adv_del.grid(column=5,row=7)
 
         self.save_button = ttk.Button(self, text="Select Eye",command=self.new_eye)
-        self.save_button.grid(column=4,row=6,columnspan=2)
+        self.save_button.grid(column=4,row=8,columnspan=2)
 
         self.new_eye_button = ttk.Button(self, text="Save Config",command=self.save_config)
-        self.new_eye_button.grid(column=4,row=7,columnspan=2)
+        self.new_eye_button.grid(column=4,row=9,columnspan=2)
 
         self.s0_1_2_3 = tk.Text(self, width=10, height=4)
         self.s0_1_2_3.grid(column=0,row=2,rowspan=4)
@@ -132,6 +141,10 @@ class Application(tk.Frame):
         self.pos_h.insert(0, h)
         self.pos_th.delete(0, tk.END)
         self.pos_th.insert(0, th)
+        self.whi_del.delete(0, tk.END)
+        self.whi_del.insert(0, 0.0)
+        self.adv_del.delete(0, tk.END)
+        self.adv_del.insert(0, 0)
 
         self.after_task()
     
@@ -171,6 +184,10 @@ class Application(tk.Frame):
         self.pos_h.insert(0, h)
         self.pos_th.delete(0, tk.END)
         self.pos_th.insert(0, self.config_json["thresh"])
+        self.whi_del.delete(0, tk.END)
+        self.whi_del.insert(0, self.config_json["white_delay"])
+        self.adv_del.delete(0, tk.END)
+        self.adv_del.insert(0, self.config_json["advance_delay"])
         self.player_eye = cv2.imread(self.config_json["image"], cv2.IMREAD_GRAYSCALE)
         self.player_eye_tk = self.cv_image_to_tk(self.player_eye)
         self.eye_display['image'] = self.player_eye_tk
@@ -259,8 +276,10 @@ class Application(tk.Frame):
         if self.timelining:
             prng.next()
             # white screen
-            time.sleep(2)
+            time.sleep(self.config_json["white_delay"])
             waituntil = time.perf_counter()
+            prng.advance(self.config_json["advance_delay"])
+            self.advances += self.config_json["advance_delay"]
             print("entered the stationary symbol room")
             queue = []
             heapq.heappush(queue, (waituntil+1.017,0))
@@ -344,8 +363,9 @@ class Application(tk.Frame):
         if self.timelining:
             reidentified_rng.next()
             # white screen
-            time.sleep(2)
+            time.sleep(self.config_json["white_delay"])
             waituntil = time.perf_counter()
+            reidentified_rng.advance(self.config_json["advance_delay"])
             print("entered the stationary symbol room")
             queue = []
             heapq.heappush(queue, (waituntil+1.017,0))
@@ -424,6 +444,8 @@ class Application(tk.Frame):
         self.config_json["view"] = [int(self.pos_x.get()),int(self.pos_y.get()),int(self.pos_w.get()),int(self.pos_h.get())]
         self.config_json["thresh"] = float(self.pos_th.get())
         self.config_json["WindowPrefix"] = self.prefix_input.get()
+        self.config_json["white_delay"] = float(self.whi_del.get())
+        self.config_json["advance_del"] = int(self.adv_del.get())
         self.adv['text'] = self.advances
         self.cd['text'] = self.count_down
         self.after(100,self.after_task)

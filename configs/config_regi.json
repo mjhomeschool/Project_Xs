@@ -1,0 +1,15 @@
+{
+    "MonitorWindow": true,
+    "WindowPrefix": "SysDVR-Client [PID ",
+    "image": "images\\regis\\eye.png",
+    "view": [
+        615,
+        507,
+        25,
+        25
+    ],
+    "thresh": 0.75,
+    "white_delay": 3.0,
+    "advance_delay": 1,
+    "advance_del": 3
+}

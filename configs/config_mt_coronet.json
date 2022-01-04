@@ -8,5 +8,7 @@
         17,
         19
     ],
-    "thresh": 0.75
+    "thresh": 0.75,
+    "white_delay": 2,
+    "advance_delay": 0
 }
