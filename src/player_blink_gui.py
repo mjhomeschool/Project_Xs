@@ -13,6 +13,7 @@ import cv2
 import time
 import json
 import os.path
+import heapq
 from PIL import Image, ImageTk
 from xorshift import Xorshift
 
@@ -23,6 +24,7 @@ class Application(tk.Frame):
         self.previewing = False
         self.monitoring = False
         self.reidentifying = False
+        self.timelining = False
         self.config_json = {}
         self.default_config = {
             "MonitorWindow": True,
@@ -69,13 +71,16 @@ class Application(tk.Frame):
         self.monitor_blink_button.grid(column=3,row=0)
 
         self.reidentify_button = ttk.Button(self, text="Reidentify", command=self.reidentify)
-        self.reidentify_button.grid(column=4,row=0,columnspan=2)
+        self.reidentify_button.grid(column=3,row=1)
 
         self.preview_button = ttk.Button(self, text="Preview", command=self.preview)
-        self.preview_button.grid(column=6,row=0)
+        self.preview_button.grid(column=3,row=2)
 
         self.stop_tracking_button = ttk.Button(self, text="Stop Tracking", command=self.stop_tracking)
-        self.stop_tracking_button.grid(column=7,row=0)
+        self.stop_tracking_button.grid(column=3,row=3)
+
+        self.legendary_timeline_button = ttk.Button(self, text="Legendary Timeline", command=self.legendary_timeline)
+        self.legendary_timeline_button.grid(column=3,row=4)
 
         x = y = w = h = 0
         th = 0.9
@@ -112,6 +117,10 @@ class Application(tk.Frame):
         self.advances = 0
         self.adv = ttk.Label(self,text=self.advances)
         self.adv.grid(column=0,row=10)
+
+        self.count_down = 0
+        self.cd = ttk.Label(self,text=self.count_down)
+        self.cd.grid(column=0,row=11)
 
         self.pos_x.delete(0, tk.END)
         self.pos_x.insert(0, x)
@@ -171,6 +180,9 @@ class Application(tk.Frame):
     def stop_tracking(self):
         self.tracking = False
 
+    def legendary_timeline(self):
+        self.timelining = True
+
     def monitor_blinks(self):
         if not self.monitoring:
             self.monitor_blink_button['text'] = "Stop Monitoring"
@@ -225,7 +237,17 @@ class Application(tk.Frame):
 
         self.advances = 0
         self.tracking = True
+        self.count_down = None
         while self.tracking:
+            if self.count_down is None:
+                if self.timelining:
+                    self.count_down = 10
+            elif self.count_down != 0:
+                self.count_down -= 1
+                print(self.count_down+1)
+            else:
+                break
+            
             self.advances += 1
             r = prng.next()
             waituntil += 1.018
@@ -234,6 +256,35 @@ class Application(tk.Frame):
             
             next_time = waituntil - time.perf_counter() or 0
             time.sleep(next_time)
+        if self.timelining:
+            prng.next()
+            # white screen
+            time.sleep(2)
+            waituntil = time.perf_counter()
+            print("entered the stationary symbol room")
+            queue = []
+            heapq.heappush(queue, (waituntil+1.017,0))
+
+            blink_int = prng.rangefloat(100.0, 370.0)/30 - 0.048
+
+            heapq.heappush(queue, (waituntil+blink_int,1))
+            while queue and self.tracking:
+                self.advances += 1
+                w, q = heapq.heappop(queue)
+                next_time = w - time.perf_counter() or 0
+                if next_time>0:
+                    time.sleep(next_time)
+
+                if q==0:
+                    r = prng.next()
+                    print(f"advances:{self.advances}, blink:{hex(r&0xF)}")
+                    heapq.heappush(queue, (w+1.017, 0))
+                else:
+                    blink_int = prng.rangefloat(100.0, 370.0)/30 - 0.048
+
+                    heapq.heappush(queue, (w+blink_int, 1))
+                    print(f"advances:{self.advances}, interval:{blink_int}")
+            self.timelining = False
 
     def reidentifying_work(self):
         self.tracking = False
@@ -257,7 +308,7 @@ class Application(tk.Frame):
 
         print([hex(x) for x in state])
         observed_blinks, _, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], tk_window=self, th=self.config_json["thresh"], size=20)
-        reidentified_rng, adv = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks, return_advance=True, npc=1)
+        reidentified_rng, adv = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks, return_advance=True)
 
 
         self.reidentify_button['text'] = "Reidentify"
@@ -271,7 +322,17 @@ class Application(tk.Frame):
 
         self.advances = adv+diff
         self.tracking = True
+        self.count_down = None
         while self.tracking:
+            if self.count_down is None:
+                if self.timelining:
+                    self.count_down = 10
+            elif self.count_down != 0:
+                self.count_down -= 1
+                print(self.count_down+1)
+            else:
+                break
+            
             self.advances += 1
             r = reidentified_rng.next()
             waituntil += 1.018
@@ -280,6 +341,35 @@ class Application(tk.Frame):
             
             next_time = waituntil - time.perf_counter() or 0
             time.sleep(next_time)
+        if self.timelining:
+            reidentified_rng.next()
+            # white screen
+            time.sleep(2)
+            waituntil = time.perf_counter()
+            print("entered the stationary symbol room")
+            queue = []
+            heapq.heappush(queue, (waituntil+1.017,0))
+
+            blink_int = reidentified_rng.rangefloat(100.0, 370.0)/30 - 0.048
+
+            heapq.heappush(queue, (waituntil+blink_int,1))
+            while queue and self.tracking:
+                self.advances += 1
+                w, q = heapq.heappop(queue)
+                next_time = w - time.perf_counter() or 0
+                if next_time>0:
+                    time.sleep(next_time)
+
+                if q==0:
+                    r = reidentified_rng.next()
+                    print(f"advances:{self.advances}, blink:{hex(r&0xF)}")
+                    heapq.heappush(queue, (w+1.017, 0))
+                else:
+                    blink_int = reidentified_rng.rangefloat(100.0, 370.0)/30 - 0.048
+
+                    heapq.heappush(queue, (w+blink_int, 1))
+                    print(f"advances:{self.advances}, interval:{blink_int}")
+            self.timelining = False
 
     def preview(self):
         if not self.previewing:
@@ -335,6 +425,7 @@ class Application(tk.Frame):
         self.config_json["thresh"] = float(self.pos_th.get())
         self.config_json["WindowPrefix"] = self.prefix_input.get()
         self.adv['text'] = self.advances
+        self.cd['text'] = self.count_down
         self.after(100,self.after_task)
 
     def signal_handler(self, signal, frame):
