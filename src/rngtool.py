@@ -55,6 +55,8 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
                 tk_window.monitor_tk = None
                 exit()
         _, frame = video.read()
+        if not MonitorWindow:
+            frame = cv2.resize(frame,(960,540))
         time_counter = time.perf_counter()
         roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)
         if (roi==prev_roi).all():
@@ -194,6 +196,8 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, MonitorWindo
     # 瞬きの観測
     while len(intervals)<size:
         _, frame = video.read()
+        if not MonitorWindow:
+            frame = cv2.resize(frame,(960,540))
         time_counter = time.perf_counter()
 
         roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)

@@ -426,7 +426,8 @@ class Application(tk.Frame):
             w, h = eye.shape[::-1]
             roi_x, roi_y, roi_w, roi_h = self.config_json["view"]
             _, frame = video.read()
-            frame = cv2.resize(frame,(960,540))
+            if not self.config_json["MonitorWindow"]:
+                frame = cv2.resize(frame,(960,540))
             roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)
             res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
             _, match, _, max_loc = cv2.minMaxLoc(res)
