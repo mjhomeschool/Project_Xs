@@ -372,6 +372,7 @@ class Application(tk.Frame):
             time.sleep(self.config_json["white_delay"])
             waituntil = time.perf_counter()
             reidentified_rng.advance(self.config_json["advance_delay"])
+            self.advances += self.config_json["advance_delay"]
             print("entered the stationary symbol room")
             queue = []
             heapq.heappush(queue, (waituntil+1.017,0))
