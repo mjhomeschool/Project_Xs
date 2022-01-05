@@ -15,7 +15,6 @@ import json
 import os.path
 import heapq
 from PIL import Image, ImageTk
-from stationary import reidentify
 from xorshift import Xorshift
 
 class Application(tk.Frame):
