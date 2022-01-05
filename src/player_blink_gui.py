@@ -34,7 +34,8 @@ class Application(tk.Frame):
             "view": [0, 0, 0, 0],
             "thresh": 0.9,
             "white_delay": 0.0,
-            "advance_delay": 0
+            "advance_delay": 0,
+            "crop": [0,0,0,0]
         }
         self.pack()
         self.create_widgets()
@@ -65,10 +66,14 @@ class Application(tk.Frame):
         self.prefix_input = ttk.Entry(self)
         self.prefix_input.grid(column=1,row=2)
 
+        self.monitor_window_var = tk.IntVar()
+        self.monitor_window = ttk.Checkbutton(self,text="Monitor Window",variable=self.monitor_window_var)
+        self.monitor_window.grid(column=2,row=2)
+
         self.monitor_display_buffer = ttk.Label(self)
-        self.monitor_display_buffer.grid(column=1,row=3,rowspan=64)
+        self.monitor_display_buffer.grid(column=1,row=3,rowspan=64,columnspan=2)
         self.monitor_display = ttk.Label(self)
-        self.monitor_display.grid(column=1,row=3,rowspan=64)
+        self.monitor_display.grid(column=1,row=3,rowspan=64,columnspan=2)
 
         self.monitor_blink_button = ttk.Button(self, text="Monitor Blinks", command=self.monitor_blinks)
         self.monitor_blink_button.grid(column=3,row=0)
@@ -193,6 +198,7 @@ class Application(tk.Frame):
         self.eye_display['image'] = self.player_eye_tk
         self.prefix_input.delete(0, tk.END)
         self.prefix_input.insert(0, self.config_json["WindowPrefix"])
+        self.monitor_window_var.set(self.config_json["MonitorWindow"])
 
     def stop_tracking(self):
         self.tracking = False
@@ -420,6 +426,7 @@ class Application(tk.Frame):
             w, h = eye.shape[::-1]
             roi_x, roi_y, roi_w, roi_h = self.config_json["view"]
             _, frame = video.read()
+            frame = cv2.resize(frame,(960,540))
             roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)
             res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
             _, match, _, max_loc = cv2.minMaxLoc(res)
@@ -446,6 +453,7 @@ class Application(tk.Frame):
         self.config_json["WindowPrefix"] = self.prefix_input.get()
         self.config_json["white_delay"] = float(self.whi_del.get())
         self.config_json["advance_del"] = int(self.adv_del.get())
+        self.config_json["MonitorWindow"] = self.monitor_window_var.get()
         self.adv['text'] = self.advances
         self.cd['text'] = self.count_down
         self.after(100,self.after_task)
