@@ -34,7 +34,8 @@ class Application(tk.Frame):
             "thresh": 0.9,
             "white_delay": 0.0,
             "advance_delay": 0,
-            "crop": [0,0,0,0]
+            "crop": [0,0,0,0],
+            "camera": 0
         }
         self.pack()
         self.create_widgets()
@@ -64,6 +65,9 @@ class Application(tk.Frame):
 
         self.prefix_input = ttk.Entry(self)
         self.prefix_input.grid(column=1,row=2)
+
+        self.camera_index = tk.Spinbox(self, from_= 0, to = 99, width = 5)
+        self.camera_index.grid(column=2,row=1)
 
         self.monitor_window_var = tk.IntVar()
         self.monitor_window = ttk.Checkbutton(self,text="Monitor Window",variable=self.monitor_window_var)
@@ -149,6 +153,8 @@ class Application(tk.Frame):
         self.whi_del.insert(0, 0.0)
         self.adv_del.delete(0, tk.END)
         self.adv_del.insert(0, 0)
+        self.camera_index.delete(0, tk.END)
+        self.camera_index.insert(0, 0)
 
         self.after_task()
     
@@ -192,6 +198,8 @@ class Application(tk.Frame):
         self.whi_del.insert(0, self.config_json["white_delay"])
         self.adv_del.delete(0, tk.END)
         self.adv_del.insert(0, self.config_json["advance_delay"])
+        self.camera_index.delete(0, tk.END)
+        self.camera_index.insert(0, self.config_json["camera"])
         self.player_eye = cv2.imread(self.config_json["image"], cv2.IMREAD_GRAYSCALE)
         self.player_eye_tk = self.cv_image_to_tk(self.player_eye)
         self.eye_display['image'] = self.player_eye_tk
@@ -229,7 +237,7 @@ class Application(tk.Frame):
     
     def monitoring_work(self):
         self.tracking = False
-        blinks, intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], tk_window=self, th=self.config_json["thresh"])
+        blinks, intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"])
         prng = rngtool.recov(blinks, intervals)
 
         self.monitor_blink_button['text'] = "Monitor Blinks"
@@ -331,7 +339,7 @@ class Application(tk.Frame):
         self.s01_23.insert(1.0,s01+"\n"+s23)
 
         print([hex(x) for x in state])
-        observed_blinks, _, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], tk_window=self, th=self.config_json["thresh"], size=20)
+        observed_blinks, _, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"], size=20)
         reidentified_rng, adv = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks, return_advance=True)
 
 
@@ -415,10 +423,11 @@ class Application(tk.Frame):
             from windowcapture import WindowCapture
             video = WindowCapture(self.config_json["WindowPrefix"],self.config_json["crop"])
         else:
-            video = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+            video = cv2.VideoCapture(self.config_json["camera"],cv2.CAP_DSHOW)
             video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
             video.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
             video.set(cv2.CAP_PROP_BUFFERSIZE,1)
+            print(f"camera {self.config_json['camera']}")
 
 
         while self.previewing:
@@ -455,6 +464,7 @@ class Application(tk.Frame):
         self.config_json["white_delay"] = float(self.whi_del.get())
         self.config_json["advance_delay"] = int(self.adv_del.get())
         self.config_json["MonitorWindow"] = self.monitor_window_var.get()
+        self.config_json["camera"] = int(self.camera_index.get())
         self.adv['text'] = self.advances
         self.cd['text'] = self.count_down
         self.after(100,self.after_task)

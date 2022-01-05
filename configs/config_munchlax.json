@@ -11,5 +11,6 @@
     "thresh": 0.9,
     "white_delay": 0,
     "advance_delay": 0,
-    "crop": [0,0,0,0]
+    "crop": [0,0,0,0],
+    "camera": 0
 }
