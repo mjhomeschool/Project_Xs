@@ -165,7 +165,7 @@ class Application(tk.Frame):
         self.config_combobox_onchange()
     
     def new_eye(self):
-        self.config_json["image"] = os.path.relpath(fd.askopenfilename(initialdir="./images/", filetypes=[("Image", ".png")]))
+        self.config_json["image"] = "./"+os.path.relpath(fd.askopenfilename(initialdir="./images/", filetypes=[("Image", ".png")])).replace("\\","/")
         self.player_eye = cv2.imread(self.config_json["image"], cv2.IMREAD_GRAYSCALE)
         self.player_eye_tk = self.cv_image_to_tk(self.player_eye)
         self.eye_display['image'] = self.player_eye_tk

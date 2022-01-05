@@ -1,7 +1,7 @@
 {
     "MonitorWindow": true,
     "WindowPrefix": "LM-Q",
-    "image": "images\\phone\\eye.png",
+    "image": "images/phone/eye.png",
     "view": [
         217,
         102,
