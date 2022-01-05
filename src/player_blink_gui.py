@@ -453,7 +453,7 @@ class Application(tk.Frame):
         self.config_json["thresh"] = float(self.pos_th.get())
         self.config_json["WindowPrefix"] = self.prefix_input.get()
         self.config_json["white_delay"] = float(self.whi_del.get())
-        self.config_json["advance_del"] = int(self.adv_del.get())
+        self.config_json["advance_delay"] = int(self.adv_del.get())
         self.config_json["MonitorWindow"] = self.monitor_window_var.get()
         self.adv['text'] = self.advances
         self.cd['text'] = self.count_down
