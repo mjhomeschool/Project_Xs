@@ -423,7 +423,15 @@ class Application(tk.Frame):
             from windowcapture import WindowCapture
             video = WindowCapture(self.config_json["WindowPrefix"],self.config_json["crop"])
         else:
-            video = cv2.VideoCapture(self.config_json["camera"],cv2.CAP_DSHOW)
+            if sys.platform.startswith('linux'): # all Linux
+                backend = cv2.CAP_V4L
+            elif sys.platform.startswith('win'): # MS Windows
+                backend = cv2.CAP_DSHOW
+            elif sys.platform.startswith('darwin'): # macOS
+                backend = cv2.CAP_QT
+            else:
+                backend = cv2.CAP_ANY # auto-detect via OpenCV
+            video = cv2.VideoCapture(self.config_json["camera"],backend)
             video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
             video.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
             video.set(cv2.CAP_PROP_BUFFERSIZE,1)

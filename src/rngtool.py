@@ -4,6 +4,7 @@
 from typing import List
 from typing import Tuple
 import time
+import sys
 import cv2
 from xorshift import Xorshift
 import calc
@@ -30,7 +31,15 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
         from windowcapture import WindowCapture
         video = WindowCapture(WindowPrefix,crop)
     else:
-        video = cv2.VideoCapture(camera,cv2.CAP_DSHOW)
+        if sys.platform.startswith('linux'): # all Linux
+            backend = cv2.CAP_V4L
+        elif sys.platform.startswith('win'): # MS Windows
+            backend = cv2.CAP_DSHOW
+        elif sys.platform.startswith('darwin'): # macOS
+            backend = cv2.CAP_QT
+        else:
+            backend = cv2.CAP_ANY # auto-detect via OpenCV
+        video = cv2.VideoCapture(camera,backend)
         video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
         video.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
         video.set(cv2.CAP_PROP_BUFFERSIZE,1)
@@ -180,7 +189,15 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, MonitorWindo
         from windowcapture import WindowCapture
         video = WindowCapture(WindowPrefix, crop)
     else:
-        video = cv2.VideoCapture(camera,cv2.CAP_DSHOW)
+        if sys.platform.startswith('linux'): # all Linux
+            backend = cv2.CAP_V4L
+        elif sys.platform.startswith('win'): # MS Windows
+            backend = cv2.CAP_DSHOW
+        elif sys.platform.startswith('darwin'): # macOS
+            backend = cv2.CAP_QT
+        else:
+            backend = cv2.CAP_ANY # auto-detect via OpenCV
+        video = cv2.VideoCapture(camera,backend)
         video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
         video.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
         video.set(cv2.CAP_PROP_BUFFERSIZE,1)
