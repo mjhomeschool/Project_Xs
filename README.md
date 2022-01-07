@@ -16,8 +16,6 @@ OpenCV 4.5.4
 ```
 git clone https://github.com/niart120/Project_Xs.git
 cd ./Project_Xs
-./env/Scripts/Activate.ps1
-python -m venv env
 pip install -r requirements.txt
 python ./src/tidsid.py
 ```
@@ -39,8 +37,6 @@ If you don't understand some of them, google it.
 ```
 git clone https://github.com/niart120/Project_Xs.git
 cd ./Project_Xs
-./env/Scripts/Activate.ps1
-python -m venv env
 pip install -r requirements.txt
 python ./src/tidsid.py
 ```
