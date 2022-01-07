@@ -1,0 +1,21 @@
+{
+    "MonitorWindow": false,
+    "WindowPrefix": "",
+    "image": "./images/phone_turnback/eye.png",
+    "view": [
+        286,
+        231,
+        37,
+        36
+    ],
+    "thresh": 0.9,
+    "white_delay": 0.0,
+    "advance_delay": 0,
+    "crop": [
+        0,
+        0,
+        0,
+        0
+    ],
+    "camera": 3
+}
