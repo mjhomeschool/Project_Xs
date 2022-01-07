@@ -19,6 +19,7 @@ class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
+        self.rng = None
         self.previewing = False
         self.monitoring = False
         self.reidentifying = False
@@ -137,6 +138,12 @@ class Application(tk.Frame):
         self.cd = ttk.Label(self,text=self.count_down)
         self.cd.grid(column=0,row=11)
 
+        self.advances_increase = tk.Spinbox(self, from_ = 0, to = 999999)
+        self.advances_increase.grid(column=0,row=12)
+
+        self.advances_increase_button = ttk.Button(self, text="Advance", command=self.increase_advances)
+        self.advances_increase_button.grid(column=0,row=13)
+
         self.pos_x.delete(0, tk.END)
         self.pos_x.insert(0, x)
         self.pos_y.delete(0, tk.END)
@@ -153,9 +160,16 @@ class Application(tk.Frame):
         self.adv_del.insert(0, 0)
         self.camera_index.delete(0, tk.END)
         self.camera_index.insert(0, 0)
+        self.advances_increase.delete(0, tk.END)
+        self.advances_increase.insert(0, 165)
 
         self.after_task()
     
+    def increase_advances(self):
+        plus = int(self.advances_increase.get())
+        self.rng.advance(plus)
+        self.advances += plus
+
     def new_config(self):
         with fd.asksaveasfile(initialdir="./configs/", filetypes=[("JSON", ".json")]) as f:
             json.dump(self.default_config,f,indent=4)
@@ -236,7 +250,7 @@ class Application(tk.Frame):
     def monitoring_work(self):
         self.tracking = False
         blinks, intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"])
-        prng = rngtool.recov(blinks, intervals)
+        self.rng = rngtool.recov(blinks, intervals)
 
         self.monitor_blink_button['text'] = "Monitor Blinks"
         self.monitoring = False
@@ -244,9 +258,9 @@ class Application(tk.Frame):
 
         waituntil = time.perf_counter()
         diff = round(waituntil-offset_time)
-        prng.getNextRandSequence(diff)
+        self.rng.getNextRandSequence(diff)
 
-        state = prng.getState()
+        state = self.rng.getState()
         s0 = f"{state[0]:08X}"
         s1 = f"{state[1]:08X}"
         s2 = f"{state[2]:08X}"
@@ -277,7 +291,7 @@ class Application(tk.Frame):
                 break
             
             self.advances += 1
-            r = prng.next()
+            r = self.rng.next()
             waituntil += 1.018
 
             print(f"advances:{self.advances}, blinks:{hex(r&0xF)}")        
@@ -285,17 +299,17 @@ class Application(tk.Frame):
             next_time = waituntil - time.perf_counter() or 0
             time.sleep(next_time)
         if self.timelining:
-            prng.next()
+            self.rng.next()
             # white screen
             time.sleep(self.config_json["white_delay"])
             waituntil = time.perf_counter()
-            prng.advance(self.config_json["advance_delay"])
+            self.rng.advance(self.config_json["advance_delay"])
             self.advances += self.config_json["advance_delay"]
             print("entered the stationary symbol room")
             queue = []
             heapq.heappush(queue, (waituntil+1.017,0))
 
-            blink_int = prng.rangefloat(100.0, 370.0)/30 - 0.048
+            blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
 
             heapq.heappush(queue, (waituntil+blink_int,1))
             while queue and self.tracking:
@@ -306,11 +320,11 @@ class Application(tk.Frame):
                     time.sleep(next_time)
 
                 if q==0:
-                    r = prng.next()
+                    r = self.rng.next()
                     print(f"advances:{self.advances}, blink:{hex(r&0xF)}")
                     heapq.heappush(queue, (w+1.017, 0))
                 else:
-                    blink_int = prng.rangefloat(100.0, 370.0)/30 - 0.048
+                    blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
 
                     heapq.heappush(queue, (w+blink_int, 1))
                     print(f"advances:{self.advances}, interval:{blink_int}")
@@ -338,7 +352,7 @@ class Application(tk.Frame):
 
         print([hex(x) for x in state])
         observed_blinks, _, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"], size=20)
-        reidentified_rng, adv = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks, return_advance=True)
+        self.rng, adv = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks, return_advance=True)
 
 
         self.reidentify_button['text'] = "Reidentify"
@@ -347,8 +361,8 @@ class Application(tk.Frame):
 
         waituntil = time.perf_counter()
         diff = round(waituntil-offset_time)+1
-        reidentified_rng.getNextRandSequence(diff)
-        state = reidentified_rng.getState()
+        self.rng.getNextRandSequence(diff)
+        state = self.rng.getState()
 
         self.advances = adv+diff
         self.tracking = True
@@ -364,7 +378,7 @@ class Application(tk.Frame):
                 break
             
             self.advances += 1
-            r = reidentified_rng.next()
+            r = self.rng.next()
             waituntil += 1.018
 
             print(f"advances:{self.advances}, blinks:{hex(r&0xF)}")        
@@ -372,17 +386,17 @@ class Application(tk.Frame):
             next_time = waituntil - time.perf_counter() or 0
             time.sleep(next_time)
         if self.timelining:
-            reidentified_rng.next()
+            self.rng.next()
             # white screen
             time.sleep(self.config_json["white_delay"])
             waituntil = time.perf_counter()
-            reidentified_rng.advance(self.config_json["advance_delay"])
+            self.rng.advance(self.config_json["advance_delay"])
             self.advances += self.config_json["advance_delay"]
             print("entered the stationary symbol room")
             queue = []
             heapq.heappush(queue, (waituntil+1.017,0))
 
-            blink_int = reidentified_rng.rangefloat(100.0, 370.0)/30 - 0.048
+            blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
 
             heapq.heappush(queue, (waituntil+blink_int,1))
             while queue and self.tracking:
@@ -393,11 +407,11 @@ class Application(tk.Frame):
                     time.sleep(next_time)
 
                 if q==0:
-                    r = reidentified_rng.next()
+                    r = self.rng.next()
                     print(f"advances:{self.advances}, blink:{hex(r&0xF)}")
                     heapq.heappush(queue, (w+1.017, 0))
                 else:
-                    blink_int = reidentified_rng.rangefloat(100.0, 370.0)/30 - 0.048
+                    blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
 
                     heapq.heappush(queue, (w+blink_int, 1))
                     print(f"advances:{self.advances}, interval:{blink_int}")
