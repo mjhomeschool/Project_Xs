@@ -430,6 +430,7 @@ class Application(tk.Frame):
     
     def previewing_work(self):
         last_frame_tk = None
+        last_camera = self.config_json["camera"]
 
         if self.config_json["MonitorWindow"]:
             from windowcapture import WindowCapture
@@ -451,29 +452,42 @@ class Application(tk.Frame):
 
 
         while self.previewing:
+            if self.config_json["camera"] != last_camera:
+                video = cv2.VideoCapture(self.config_json["camera"],backend)
+                video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
+                video.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
+                video.set(cv2.CAP_PROP_BUFFERSIZE,1)
+                print(f"camera {self.config_json['camera']}")
+                last_camera = self.config_json["camera"]
+
             eye = self.player_eye
             w, h = eye.shape[::-1]
             roi_x, roi_y, roi_w, roi_h = self.config_json["view"]
             _, frame = video.read()
-            if not self.config_json["MonitorWindow"]:
-                frame = cv2.resize(frame,(960,540))
-            roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)
-            res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
-            _, match, _, max_loc = cv2.minMaxLoc(res)
+            if frame is not None:
+                if not self.config_json["MonitorWindow"]:
+                    size = frame.shape[::-1]
+                    _, fw, fh = size
+                    if fw >= 1920:
+                        frame = cv2.resize(frame,(960,round(fh/fw*960)))
 
-            cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), (0,0,255), 2)
-            if 0.01<match<self.config_json["thresh"]:
-                cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), 255, 2)
-            else:
-                max_loc = (max_loc[0] + roi_x,max_loc[1] + roi_y)
-                bottom_right = (max_loc[0] + w, max_loc[1] + h)
-                cv2.rectangle(frame,max_loc, bottom_right, 255, 2)
-            frame_tk = self.cv_image_to_tk(frame)
-            self.monitor_tk_buffer = last_frame_tk
-            self.monitor_display_buffer['image'] = self.monitor_tk_buffer
-            self.monitor_tk = frame_tk
-            self.monitor_display['image'] = self.monitor_tk
-            last_frame_tk = frame_tk
+                roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)
+                res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
+                _, match, _, max_loc = cv2.minMaxLoc(res)
+
+                cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), (0,0,255), 2)
+                if 0.01<match<self.config_json["thresh"]:
+                    cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), 255, 2)
+                else:
+                    max_loc = (max_loc[0] + roi_x,max_loc[1] + roi_y)
+                    bottom_right = (max_loc[0] + w, max_loc[1] + h)
+                    cv2.rectangle(frame,max_loc, bottom_right, 255, 2)
+                frame_tk = self.cv_image_to_tk(frame)
+                self.monitor_tk_buffer = last_frame_tk
+                self.monitor_display_buffer['image'] = self.monitor_tk_buffer
+                self.monitor_tk = frame_tk
+                self.monitor_display['image'] = self.monitor_tk
+                last_frame_tk = frame_tk
         self.monitor_tk_buffer = None
         self.monitor_tk = None
 
