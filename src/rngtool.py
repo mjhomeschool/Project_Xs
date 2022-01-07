@@ -65,8 +65,8 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
                 exit()
         _, frame = video.read()
         if not MonitorWindow:
-            size = frame.shape[::-1]
-            _, fw, fh = size
+            f_size = frame.shape[::-1]
+            _, fw, fh = f_size
             if fw >= 1920:
                 frame = cv2.resize(frame,(960,round(fh/fw*960)))
         time_counter = time.perf_counter()
@@ -217,8 +217,8 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, MonitorWindo
     while len(intervals)<size:
         _, frame = video.read()
         if not MonitorWindow:
-            size = frame.shape[::-1]
-            _, fw, fh = size
+            f_size = frame.shape[::-1]
+            _, fw, fh = f_size
             if fw >= 1920:
                 frame = cv2.resize(frame,(960,round(fh/fw*960)))
         time_counter = time.perf_counter()
