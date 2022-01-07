@@ -14,7 +14,7 @@ OpenCV 4.5.4
 
 一部分からない場合はgoogle先生に聞いてください
 ```
-git clone https://github.com/niart120/Project_Xs.git
+git clone https://github.com/Lincoln-LM/Project_Xs.git
 cd ./Project_Xs
 pip install -r requirements.txt
 python ./src/player_blink_gui.py
@@ -35,7 +35,7 @@ It is not recommended to run if you do not understand the following command.
 If you don't understand some of them, google it.
 
 ```
-git clone https://github.com/niart120/Project_Xs.git
+git clone https://github.com/Lincoln-LM/Project_Xs.git
 cd ./Project_Xs
 pip install -r requirements.txt
 python ./src/player_blink_gui.py
