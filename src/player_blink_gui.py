@@ -1,19 +1,17 @@
+import cv2
+import heapq
 import json
+import os.path
 import signal
 import sys
+import threading
 import time
 import tkinter as tk
 import tkinter.filedialog as fd
-import threading
+import rngtool
 from tkinter import ttk
 from os import listdir
 from os.path import isfile, join
-import rngtool
-import cv2
-import time
-import json
-import os.path
-import heapq
 from PIL import Image, ImageTk
 from xorshift import Xorshift
 
