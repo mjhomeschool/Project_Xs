@@ -26,6 +26,7 @@ class Application(tk.Frame):
         self.previewing = False
         self.monitoring = False
         self.reidentifying = False
+        self.tidsiding = False
         self.timelining = False
         self.config_json = {}
         self.default_config = {
@@ -98,6 +99,9 @@ class Application(tk.Frame):
 
         self.timeline_button = ttk.Button(self, text="Timeline", command=self.timeline)
         self.timeline_button.grid(column=3,row=4)
+
+        self.tidsid_button = ttk.Button(self, text="TID/SID", command=self.tidsid)
+        self.tidsid_button.grid(column=3,row=5)
 
         x = y = w = h = 0
         th = 0.9
@@ -286,6 +290,17 @@ class Application(tk.Frame):
         else:
             self.reidentify_button['text'] = "Reidentify"
             self.reidentifying = False
+
+    def tidsid(self):
+        if not self.tidsiding:
+            self.tidsid_button['text'] = "Stop TID/SID"
+            self.tidsiding = True
+            self.tidsiding_thread=threading.Thread(target=self.tidsiding_work)
+            self.tidsiding_thread.daemon = True
+            self.tidsiding_thread.start()
+        else:
+            self.tidsid_button['text'] = "TID/SID"
+            self.tidsiding = False
     
     def monitoring_work(self):
         self.tracking = False
@@ -381,6 +396,48 @@ class Application(tk.Frame):
                     print(f"advances:{self.advances}, interval:{blink_int}")
             self.timelining = False
 
+    def tidsiding_work(self):
+        self.tracking = False
+        munchlax_intervals = rngtool.tracking_poke_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"], size=64)
+        self.rng = rngtool.recovByMunchlax(munchlax_intervals)
+        state = self.rng.getState()
+
+        self.tidsid_button['text'] = "TID/SID"
+        self.tidsiding = False
+        self.preview()
+
+        s0 = f"{state[0]:08X}"
+        s1 = f"{state[1]:08X}"
+        s2 = f"{state[2]:08X}"
+        s3 = f"{state[3]:08X}"
+
+        s01 = s0+s1
+        s23 = s2+s3
+
+        print(s01,s23)
+        print(s0,s1,s2,s3)
+        self.s0_1_2_3.delete(1.0, tk.END)
+        self.s01_23.delete(1.0, tk.END)
+
+        self.s0_1_2_3.insert(1.0,s0+"\n"+s1+"\n"+s2+"\n"+s3)
+        self.s01_23.insert(1.0,s01+"\n"+s23)
+
+        waituntil = time.perf_counter()
+        ts = time.time()
+
+        print([hex(x) for x in state],ts)
+        self.tracking = True
+        while self.tracking:
+            self.advances += 1
+            interval = self.rng.rangefloat(3.0,12.0) + 0.285
+            waituntil += interval
+
+            print(f"advances:{self.advances}")
+
+            next_time = waituntil - time.perf_counter() or 0
+            time.sleep(next_time)
+
+    
     def reidentifying_work(self):
         self.tracking = False
         state = [int(x,16) for x in self.s0_1_2_3.get(1.0,tk.END).split("\n")[:4]]

@@ -3,18 +3,23 @@
     "WindowPrefix": "SysDVR-Client [PID ",
     "image": "./images/munchlax/eye.png",
     "view": [
-        470,
-        430,
-        50,
-        60
+        487,
+        446,
+        32,
+        44
     ],
-    "thresh": 0.9,
-    "white_delay": 0,
+    "thresh": 0.85,
+    "white_delay": 0.0,
     "advance_delay": 0,
     "advance_delay_2": 0,
     "npc": 0,
     "pokemon_npc": 0,
     "timeline_npc": 0,
-    "crop": [0,0,0,0],
+    "crop": [
+        0,
+        0,
+        0,
+        0
+    ],
     "camera": 0
 }

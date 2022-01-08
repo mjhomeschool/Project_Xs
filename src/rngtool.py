@@ -135,6 +135,7 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
         tk_window.progress['text'] = "0/0"
         frame_tk = None
         last_frame_tk = None
+    video.release()
     return (blinks, intervals, offset_time)
 
 def tracking_blink_manual(size = 40, reidentify = False)->Tuple[List[int],List[int],float]:
@@ -179,7 +180,7 @@ def tracking_blink_manual(size = 40, reidentify = False)->Tuple[List[int],List[i
 
     return (blinks, intervals, offset_time)
 
-def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, MonitorWindow = False, WindowPrefix = "SysDVR-Client [PID ", crop = None, camera = 0)->Tuple[List[int],List[int],float]:
+def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 64, th = 0.85, MonitorWindow = False, WindowPrefix = "SysDVR-Client [PID ", crop = None, tk_window = None, camera = 0)->Tuple[List[int],List[int],float]:
     """measuring the type and interval of pokemon's blinks
 
     Returns:
@@ -187,6 +188,7 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, MonitorWindo
     """
 
     eye = img
+    last_frame_tk = None
     
     if MonitorWindow:
         from windowcapture import WindowCapture
@@ -206,7 +208,6 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, MonitorWindo
         video.set(cv2.CAP_PROP_BUFFERSIZE,1)
 
     state = IDLE
-
     intervals = []
     prev_roi = None
     prev_time = time.perf_counter()
@@ -215,6 +216,12 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, MonitorWindo
 
     # 瞬きの観測
     while len(intervals)<size:
+        if tk_window != None:
+            if not tk_window.tidsiding:
+                tk_window.progress['text'] = "0/0"
+                tk_window.monitor_tk_buffer = None
+                tk_window.monitor_tk = None
+                exit()
         _, frame = video.read()
         if not MonitorWindow:
             f_size = frame.shape[::-1]
@@ -231,12 +238,14 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, MonitorWindo
         res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
         _, match, _, max_loc = cv2.minMaxLoc(res)
 
-        if 0.4<match<0.85:
+        if 0.4<match<th:
             cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), 255, 2)
             if state==IDLE:
                 interval = (time_counter - prev_time)
                 intervals.append(interval)
                 print(f"Intervals {len(intervals)}/{size}")
+                if tk_window != None:
+                    tk_window.progress['text'] = f"{len(intervals)}/{size}"
                 state = SINGLE
                 prev_time = time_counter
             elif state==SINGLE:
@@ -248,12 +257,26 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, MonitorWindo
         if state!=IDLE and time_counter - prev_time>0.7:
             state = IDLE
         
-        cv2.imshow("view", frame)
-        keypress = cv2.waitKey(1)
-        if keypress == ord('q'):
-            cv2.destroyAllWindows()
-            exit()
-    cv2.destroyAllWindows()
+        if tk_window == None:
+            print("CV2")
+            cv2.imshow("view", frame)
+            keypress = cv2.waitKey(1)
+            if keypress == ord('q'):
+                cv2.destroyAllWindows()
+                exit()
+        else:
+            frame_tk = tk_window.cv_image_to_tk(frame)
+            tk_window.monitor_tk_buffer = last_frame_tk
+            tk_window.monitor_display_buffer['image'] = tk_window.monitor_tk_buffer
+            tk_window.monitor_tk = frame_tk
+            tk_window.monitor_display['image'] = tk_window.monitor_tk
+            last_frame_tk = frame_tk
+    if tk_window == None:
+        cv2.destroyAllWindows()
+    else:
+        tk_window.progress['text'] = "0/0"
+        frame_tk = None
+        last_frame_tk = None
     video.release()
     return intervals
 
