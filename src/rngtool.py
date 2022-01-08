@@ -238,6 +238,7 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 64, th = 0.85, M
         res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
         _, match, _, max_loc = cv2.minMaxLoc(res)
 
+        cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), (0,0,255), 2)
         if 0.4<match<th:
             cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), 255, 2)
             if state==IDLE:
@@ -258,7 +259,6 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 64, th = 0.85, M
             state = IDLE
         
         if tk_window == None:
-            print("CV2")
             cv2.imshow("view", frame)
             keypress = cv2.waitKey(1)
             if keypress == ord('q'):
