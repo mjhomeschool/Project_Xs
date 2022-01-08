@@ -33,6 +33,9 @@ class Application(tk.Frame):
             "thresh": 0.9,
             "white_delay": 0.0,
             "advance_delay": 0,
+            "advance_delay_2": 0,
+            "npc": 0,
+            "pokemon_npc": 0,
             "crop": [0,0,0,0],
             "camera": 0
         }
@@ -89,8 +92,8 @@ class Application(tk.Frame):
         self.stop_tracking_button = ttk.Button(self, text="Stop Tracking", command=self.stop_tracking)
         self.stop_tracking_button.grid(column=3,row=3)
 
-        self.legendary_timeline_button = ttk.Button(self, text="Legendary Timeline", command=self.legendary_timeline)
-        self.legendary_timeline_button.grid(column=3,row=4)
+        self.timeline_button = ttk.Button(self, text="Timeline", command=self.timeline)
+        self.timeline_button.grid(column=3,row=4)
 
         x = y = w = h = 0
         th = 0.9
@@ -102,6 +105,14 @@ class Application(tk.Frame):
         ttk.Label(self,text="Th").grid(column=4,row=5)
         ttk.Label(self,text="whi del").grid(column=4,row=6)
         ttk.Label(self,text="adv del").grid(column=4,row=7)
+        ttk.Label(self,text="adv del 2").grid(column=4,row=8)
+        ttk.Label(self,text="npc").grid(column=4,row=9)
+        ttk.Label(self,text="pokemon npc").grid(column=4,row=10)
+
+        self.menu_check_var = tk.IntVar()
+        self.menu_check = ttk.Checkbutton(self, text="+1 on menu close", variable=self.menu_check_var)
+        self.menu_check.grid(column=5,row=0)
+        self.menu_check_var.set(1)
 
         self.pos_x = tk.Spinbox(self, from_= 0, to = 99999, width = 5)
         self.pos_x.grid(column=5,row=1)
@@ -113,16 +124,22 @@ class Application(tk.Frame):
         self.pos_h.grid(column=5,row=4)
         self.pos_th = tk.Spinbox(self, from_= 0, to = 1, width = 5, increment=0.1)
         self.pos_th.grid(column=5,row=5)
-        self.whi_del = tk.Spinbox(self, from_= 0, to = 5, width = 5, increment=0.1)
+        self.whi_del = tk.Spinbox(self, from_= 0, to = 999, width = 5, increment=0.1)
         self.whi_del.grid(column=5,row=6)
-        self.adv_del = tk.Spinbox(self, from_= 0, to = 5, width = 5, increment=1)
+        self.adv_del = tk.Spinbox(self, from_= 0, to = 999, width = 5, increment=1)
         self.adv_del.grid(column=5,row=7)
+        self.adv_del_2 = tk.Spinbox(self, from_= 0, to = 999, width = 5, increment=1)
+        self.adv_del_2.grid(column=5,row=8)
+        self.npc = tk.Spinbox(self, from_= 0, to = 999, width = 5, increment=1)
+        self.npc.grid(column=5,row=9)
+        self.pokemon_npc = tk.Spinbox(self, from_= 0, to = 999, width = 5, increment=1)
+        self.pokemon_npc.grid(column=5,row=10)
 
         self.save_button = ttk.Button(self, text="Select Eye",command=self.new_eye)
-        self.save_button.grid(column=4,row=8,columnspan=2)
+        self.save_button.grid(column=4,row=11,columnspan=2)
 
         self.new_eye_button = ttk.Button(self, text="Save Config",command=self.save_config)
-        self.new_eye_button.grid(column=4,row=9,columnspan=2)
+        self.new_eye_button.grid(column=4,row=12,columnspan=2)
 
         self.s0_1_2_3 = tk.Text(self, width=10, height=4)
         self.s0_1_2_3.grid(column=0,row=2,rowspan=4)
@@ -158,6 +175,12 @@ class Application(tk.Frame):
         self.whi_del.insert(0, 0.0)
         self.adv_del.delete(0, tk.END)
         self.adv_del.insert(0, 0)
+        self.adv_del_2.delete(0, tk.END)
+        self.adv_del_2.insert(0, 0)
+        self.npc.delete(0, tk.END)
+        self.npc.insert(0, 0)
+        self.pokemon_npc.delete(0, tk.END)
+        self.pokemon_npc.insert(0, 0)
         self.camera_index.delete(0, tk.END)
         self.camera_index.insert(0, 0)
         self.advances_increase.delete(0, tk.END)
@@ -210,6 +233,12 @@ class Application(tk.Frame):
         self.whi_del.insert(0, self.config_json["white_delay"])
         self.adv_del.delete(0, tk.END)
         self.adv_del.insert(0, self.config_json["advance_delay"])
+        self.adv_del_2.delete(0, tk.END)
+        self.adv_del_2.insert(0, self.config_json["advance_delay_2"])
+        self.npc.delete(0, tk.END)
+        self.npc.insert(0, self.config_json["npc"])
+        self.pokemon_npc.delete(0, tk.END)
+        self.pokemon_npc.insert(0, self.config_json["pokemon_npc"])
         self.camera_index.delete(0, tk.END)
         self.camera_index.insert(0, self.config_json["camera"])
         self.player_eye = cv2.imread(self.config_json["image"], cv2.IMREAD_GRAYSCALE)
@@ -222,7 +251,7 @@ class Application(tk.Frame):
     def stop_tracking(self):
         self.tracking = False
 
-    def legendary_timeline(self):
+    def timeline(self):
         self.timelining = True
 
     def monitor_blinks(self):
@@ -257,8 +286,8 @@ class Application(tk.Frame):
         self.preview()
 
         waituntil = time.perf_counter()
-        diff = round(waituntil-offset_time)
-        self.rng.getNextRandSequence(diff)
+        diff = round(waituntil-offset_time)+(1 if self.menu_check_var.get() else 0)
+        self.rng.getNextRandSequence(diff*(self.config_json["npc"]+1))
 
         state = self.rng.getState()
         s0 = f"{state[0]:08X}"
@@ -290,8 +319,8 @@ class Application(tk.Frame):
             else:
                 break
             
-            self.advances += 1
-            r = self.rng.next()
+            self.advances += self.config_json["npc"]+1
+            r = self.rng.getNextRandSequence(self.config_json["npc"]+1)[-1]
             waituntil += 1.018
 
             print(f"advances:{self.advances}, blinks:{hex(r&0xF)}")        
@@ -305,19 +334,30 @@ class Application(tk.Frame):
             waituntil = time.perf_counter()
             self.rng.advance(self.config_json["advance_delay"])
             self.advances += self.config_json["advance_delay"]
-            print("entered the stationary symbol room")
+            print("blink timeline started")
             queue = []
-            heapq.heappush(queue, (waituntil+1.017,0))
-
-            blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
-
-            heapq.heappush(queue, (waituntil+blink_int,1))
+            for _ in range(self.timeline_npc):
+                heapq.heappush(queue, (waituntil+1.017,0))
+            for _ in range(self.config_json["pokemon_npc"]):
+                blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
+                heapq.heappush(queue, (waituntil+blink_int,1))
+            
+            self.count_down = 10
             while queue and self.tracking:
                 self.advances += 1
                 w, q = heapq.heappop(queue)
                 next_time = w - time.perf_counter() or 0
                 if next_time>0:
                     time.sleep(next_time)
+                
+                if self.config_json["advance_delay_2"] != 0:
+                    if self.count_down > 0:
+                        self.count_down -= 1
+                        print(self.count_down+1)
+                    elif self.count_down != -1:
+                        self.count_down -= 1
+                        self.advances += self.config_json["advance_delay_2"]
+                        self.rng.advance(self.config_json["advance_delay_2"])
 
                 if q==0:
                     r = self.rng.next()
@@ -352,7 +392,7 @@ class Application(tk.Frame):
 
         print([hex(x) for x in state])
         observed_blinks, _, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"], size=20)
-        self.rng, adv = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks, return_advance=True)
+        self.rng, adv = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks, return_advance=True, npc=self.config_json["npc"])
 
 
         self.reidentify_button['text'] = "Reidentify"
@@ -360,11 +400,11 @@ class Application(tk.Frame):
         self.preview()
 
         waituntil = time.perf_counter()
-        diff = round(waituntil-offset_time)+1
-        self.rng.getNextRandSequence(diff)
+        diff = round(waituntil-offset_time)+(1 if self.menu_check_var.get() else 0)
+        self.rng.getNextRandSequence(diff*(self.config_json["npc"]+1))
         state = self.rng.getState()
 
-        self.advances = adv+diff
+        self.advances = adv+diff*(self.config_json["npc"]+1)
         self.tracking = True
         self.count_down = None
         while self.tracking:
@@ -377,8 +417,8 @@ class Application(tk.Frame):
             else:
                 break
             
-            self.advances += 1
-            r = self.rng.next()
+            self.advances += self.config_json["npc"]+1
+            r = self.rng.getNextRandSequence(self.config_json["npc"]+1)[-1]
             waituntil += 1.018
 
             print(f"advances:{self.advances}, blinks:{hex(r&0xF)}")        
@@ -392,19 +432,30 @@ class Application(tk.Frame):
             waituntil = time.perf_counter()
             self.rng.advance(self.config_json["advance_delay"])
             self.advances += self.config_json["advance_delay"]
-            print("entered the stationary symbol room")
+            print("blink timeline started")
             queue = []
-            heapq.heappush(queue, (waituntil+1.017,0))
-
-            blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
-
-            heapq.heappush(queue, (waituntil+blink_int,1))
+            for _ in range(self.timeline_npc):
+                heapq.heappush(queue, (waituntil+1.017,0))
+            for _ in range(self.config_json["pokemon_npc"]):
+                blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
+                heapq.heappush(queue, (waituntil+blink_int,1))
+            
+            self.count_down = 10
             while queue and self.tracking:
                 self.advances += 1
                 w, q = heapq.heappop(queue)
                 next_time = w - time.perf_counter() or 0
                 if next_time>0:
                     time.sleep(next_time)
+                
+                if self.config_json["advance_delay_2"] != 0:
+                    if self.count_down > 0:
+                        self.count_down -= 1
+                        print(self.count_down+1)
+                    elif self.count_down != -1:
+                        self.count_down -= 1
+                        self.advances += self.config_json["advance_delay_2"]
+                        self.rng.advance(self.config_json["advance_delay_2"])
 
                 if q==0:
                     r = self.rng.next()
@@ -497,6 +548,9 @@ class Application(tk.Frame):
         self.config_json["WindowPrefix"] = self.prefix_input.get()
         self.config_json["white_delay"] = float(self.whi_del.get())
         self.config_json["advance_delay"] = int(self.adv_del.get())
+        self.config_json["advance_delay_2"] = int(self.adv_del_2.get())
+        self.config_json["npc"] = int(self.npc.get())
+        self.config_json["pokemon_npc"] = int(self.pokemon_npc.get())
         self.config_json["MonitorWindow"] = bool(self.monitor_window_var.get())
         self.config_json["camera"] = int(self.camera_index.get())
         self.adv['text'] = self.advances

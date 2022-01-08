@@ -11,6 +11,9 @@
     "thresh": 0.8,
     "white_delay": 0.0,
     "advance_delay": 0,
+    "advance_delay_2": 0,
+    "npc": 0,
+    "pokemon_npc": 0,
     "crop": [
         173,
         91,
