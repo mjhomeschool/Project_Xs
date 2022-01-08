@@ -8,11 +8,14 @@ import threading
 import time
 import tkinter as tk
 import tkinter.filedialog as fd
-import rngtool
 from tkinter import ttk
 from os import listdir
 from os.path import isfile, join
 from PIL import Image, ImageTk
+
+os.chdir(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+import rngtool
 from xorshift import Xorshift
 
 class Application(tk.Frame):
