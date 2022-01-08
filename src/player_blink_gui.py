@@ -347,7 +347,7 @@ class Application(tk.Frame):
             for _ in range(self.config_json["timeline_npc"]+1):
                 heapq.heappush(queue, (waituntil+1.017,0))
             for _ in range(self.config_json["pokemon_npc"]):
-                blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
+                blink_int = self.rng.rangefloat(3,12) + 0.285
                 heapq.heappush(queue, (waituntil+blink_int,1))
             
             self.count_down = 10
@@ -372,7 +372,7 @@ class Application(tk.Frame):
                     print(f"advances:{self.advances}, blink:{hex(r&0xF)}")
                     heapq.heappush(queue, (w+1.017, 0))
                 else:
-                    blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
+                    blink_int = self.rng.rangefloat(3,12) + 0.285
 
                     heapq.heappush(queue, (w+blink_int, 1))
                     print(f"advances:{self.advances}, interval:{blink_int}")
@@ -445,7 +445,7 @@ class Application(tk.Frame):
             for _ in range(self.config_json["timeline_npc"]):
                 heapq.heappush(queue, (waituntil+1.017,0))
             for _ in range(self.config_json["pokemon_npc"]):
-                blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
+                blink_int = self.rng.rangefloat(3,12) + 0.285
                 heapq.heappush(queue, (waituntil+blink_int,1))
             
             self.count_down = 10
@@ -470,7 +470,7 @@ class Application(tk.Frame):
                     print(f"advances:{self.advances}, blink:{hex(r&0xF)}")
                     heapq.heappush(queue, (w+1.017, 0))
                 else:
-                    blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
+                    blink_int = self.rng.rangefloat(3,12) + 0.285
 
                     heapq.heappush(queue, (w+blink_int, 1))
                     print(f"advances:{self.advances}, interval:{blink_int}")

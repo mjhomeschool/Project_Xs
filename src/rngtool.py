@@ -47,7 +47,7 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
     state = IDLE
     blinks = []
     intervals = []
-    prev_time = 0
+    prev_time = time.perf_counter()
     w, h = eye.shape[::-1]
 
     prev_roi = None
@@ -227,7 +227,7 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 60, MonitorWindo
         if (roi==prev_roi).all():
             continue
         prev_roi = roi
-
+        
         res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
         _, match, _, max_loc = cv2.minMaxLoc(res)
 
@@ -353,7 +353,7 @@ def recovByMunchlax(rawintervals:List[float])->Xorshift:
     states = prng.getState()
 
     #validation check
-    expected_intervals = [randrange(r,100,370)/30 for r in prng.getNextRandSequence(advances)]
+    expected_intervals = [randrange(r,100,370) for r in prng.getNextRandSequence(advances)]
 
     paired = list(zip(intervals,expected_intervals))
     #print(paired)

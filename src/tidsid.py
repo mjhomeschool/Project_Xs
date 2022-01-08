@@ -32,7 +32,7 @@ def expr():
     if munch_eye is None:
         print("path is wrong")
         return
-    gombe_intervals = rngtool.tracking_poke_blink(munch_eye, *config["view"], size=60, MonitorWindow=config["MonitorWindow"], WindowPrefix=config["WindowPrefix"])
+    gombe_intervals = rngtool.tracking_poke_blink(munch_eye, *config["view"], size=64, MonitorWindow=config["MonitorWindow"], WindowPrefix=config["WindowPrefix"])
 
     interval_prng = rngtool.recovByMunchlax(gombe_intervals)
     state = interval_prng.getState()
@@ -40,7 +40,7 @@ def expr():
     #timecounter reset
     advances = 0
     id_prng = Xorshift(*interval_prng.getState())
-    id_prng.getNextRandSequence(1)
+    id_prng.next()
     
     waituntil = time.perf_counter()
     ts = time.time()
@@ -48,8 +48,8 @@ def expr():
     #ID予測開始
     while True:
         advances += 1
-        r = interval_prng.next()
-        interval = randrange(r, 100, 370)/30  - 0.048
+        interval = interval_prng.rangefloat(3.0,12.0) + 0.285
+        #interval = interval_prng.range(3.0,12.0) + 0.285
         waituntil += interval
 
         id_r = id_prng.next()
