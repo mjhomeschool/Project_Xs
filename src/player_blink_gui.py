@@ -140,10 +140,10 @@ class Application(tk.Frame):
         self.pokemon_npc.grid(column=5,row=11)
 
         self.save_button = ttk.Button(self, text="Select Eye",command=self.new_eye)
-        self.save_button.grid(column=4,row=11,columnspan=2)
+        self.save_button.grid(column=4,row=12,columnspan=2)
 
         self.new_eye_button = ttk.Button(self, text="Save Config",command=self.save_config)
-        self.new_eye_button.grid(column=4,row=12,columnspan=2)
+        self.new_eye_button.grid(column=4,row=13,columnspan=2)
 
         self.s0_1_2_3 = tk.Text(self, width=10, height=4)
         self.s0_1_2_3.grid(column=0,row=2,rowspan=4)
