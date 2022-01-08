@@ -35,6 +35,7 @@ class Application(tk.Frame):
             "advance_delay": 0,
             "advance_delay_2": 0,
             "npc": 0,
+            "timeline_npc": 0,
             "pokemon_npc": 0,
             "crop": [0,0,0,0],
             "camera": 0
@@ -107,7 +108,8 @@ class Application(tk.Frame):
         ttk.Label(self,text="adv del").grid(column=4,row=7)
         ttk.Label(self,text="adv del 2").grid(column=4,row=8)
         ttk.Label(self,text="npc").grid(column=4,row=9)
-        ttk.Label(self,text="pokemon npc").grid(column=4,row=10)
+        ttk.Label(self,text="timeline npc").grid(column=4,row=10)
+        ttk.Label(self,text="pokemon npc").grid(column=4,row=11)
 
         self.menu_check_var = tk.IntVar()
         self.menu_check = ttk.Checkbutton(self, text="+1 on menu close", variable=self.menu_check_var)
@@ -132,8 +134,10 @@ class Application(tk.Frame):
         self.adv_del_2.grid(column=5,row=8)
         self.npc = tk.Spinbox(self, from_= 0, to = 999, width = 5, increment=1)
         self.npc.grid(column=5,row=9)
+        self.timeline_npc = tk.Spinbox(self, from_= 0, to = 999, width = 5, increment=1)
+        self.timeline_npc.grid(column=5,row=10)
         self.pokemon_npc = tk.Spinbox(self, from_= 0, to = 999, width = 5, increment=1)
-        self.pokemon_npc.grid(column=5,row=10)
+        self.pokemon_npc.grid(column=5,row=11)
 
         self.save_button = ttk.Button(self, text="Select Eye",command=self.new_eye)
         self.save_button.grid(column=4,row=11,columnspan=2)
@@ -179,6 +183,8 @@ class Application(tk.Frame):
         self.adv_del_2.insert(0, 0)
         self.npc.delete(0, tk.END)
         self.npc.insert(0, 0)
+        self.timeline_npc.delete(0, tk.END)
+        self.timeline_npc.insert(0, 0)
         self.pokemon_npc.delete(0, tk.END)
         self.pokemon_npc.insert(0, 0)
         self.camera_index.delete(0, tk.END)
@@ -239,6 +245,8 @@ class Application(tk.Frame):
         self.npc.insert(0, self.config_json["npc"])
         self.pokemon_npc.delete(0, tk.END)
         self.pokemon_npc.insert(0, self.config_json["pokemon_npc"])
+        self.timeline_npc.delete(0, tk.END)
+        self.timeline_npc.insert(0, self.config_json["timeline_npc"])
         self.camera_index.delete(0, tk.END)
         self.camera_index.insert(0, self.config_json["camera"])
         self.player_eye = cv2.imread(self.config_json["image"], cv2.IMREAD_GRAYSCALE)
@@ -336,7 +344,7 @@ class Application(tk.Frame):
             self.advances += self.config_json["advance_delay"]
             print("blink timeline started")
             queue = []
-            for _ in range(self.timeline_npc):
+            for _ in range(self.config_json["timeline_npc"]+1):
                 heapq.heappush(queue, (waituntil+1.017,0))
             for _ in range(self.config_json["pokemon_npc"]):
                 blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
@@ -434,7 +442,7 @@ class Application(tk.Frame):
             self.advances += self.config_json["advance_delay"]
             print("blink timeline started")
             queue = []
-            for _ in range(self.timeline_npc):
+            for _ in range(self.config_json["timeline_npc"]):
                 heapq.heappush(queue, (waituntil+1.017,0))
             for _ in range(self.config_json["pokemon_npc"]):
                 blink_int = self.rng.rangefloat(100.0, 370.0)/30 - 0.048
@@ -551,6 +559,7 @@ class Application(tk.Frame):
         self.config_json["advance_delay_2"] = int(self.adv_del_2.get())
         self.config_json["npc"] = int(self.npc.get())
         self.config_json["pokemon_npc"] = int(self.pokemon_npc.get())
+        self.config_json["timeline_npc"] = int(self.timeline_npc.get())
         self.config_json["MonitorWindow"] = bool(self.monitor_window_var.get())
         self.config_json["camera"] = int(self.camera_index.get())
         self.adv['text'] = self.advances

@@ -14,6 +14,7 @@
     "advance_delay_2": 48,
     "npc": 1,
     "pokemon_npc": 2,
+    "timeline_npc": -1,
     "crop": [
         0,
         0,
