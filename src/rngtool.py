@@ -353,7 +353,7 @@ def recovByMunchlax(rawintervals:List[float])->Xorshift:
     states = prng.getState()
 
     #validation check
-    expected_intervals = [randrange(r,100,370) for r in prng.getNextRandSequence(advances)]
+    expected_intervals = [randrange(r,100,370)/30 for r in prng.getNextRandSequence(advances)]
 
     paired = list(zip(intervals,expected_intervals))
     #print(paired)
