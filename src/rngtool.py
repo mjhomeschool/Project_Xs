@@ -36,7 +36,7 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
         elif sys.platform.startswith('win'): # MS Windows
             backend = cv2.CAP_DSHOW
         elif sys.platform.startswith('darwin'): # macOS
-            backend = cv2.CAP_QT
+            backend = cv2.CAP_ANY
         else:
             backend = cv2.CAP_ANY # auto-detect via OpenCV
         video = cv2.VideoCapture(camera,backend)
@@ -199,7 +199,7 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 64, th = 0.85, M
         elif sys.platform.startswith('win'): # MS Windows
             backend = cv2.CAP_DSHOW
         elif sys.platform.startswith('darwin'): # macOS
-            backend = cv2.CAP_QT
+            backend = cv2.CAP_ANY
         else:
             backend = cv2.CAP_ANY # auto-detect via OpenCV
         video = cv2.VideoCapture(camera,backend)

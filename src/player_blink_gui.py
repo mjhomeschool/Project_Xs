@@ -560,7 +560,7 @@ class Application(tk.Frame):
             elif sys.platform.startswith('win'): # MS Windows
                 backend = cv2.CAP_DSHOW
             elif sys.platform.startswith('darwin'): # macOS
-                backend = cv2.CAP_QT
+                backend = cv2.CAP_ANY
             else:
                 backend = cv2.CAP_ANY # auto-detect via OpenCV
             video = cv2.VideoCapture(self.config_json["camera"],backend)
