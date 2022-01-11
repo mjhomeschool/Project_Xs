@@ -141,7 +141,7 @@ class Application(tk.Frame):
         self.adv_del_2.grid(column=5,row=8)
         self.npc = tk.Spinbox(self, from_= 0, to = 999, width = 5, increment=1)
         self.npc.grid(column=5,row=9)
-        self.timeline_npc = tk.Spinbox(self, from_= 0, to = 999, width = 5, increment=1)
+        self.timeline_npc = tk.Spinbox(self, from_= -1, to = 999, width = 5, increment=1)
         self.timeline_npc.grid(column=5,row=10)
         self.pokemon_npc = tk.Spinbox(self, from_= 0, to = 999, width = 5, increment=1)
         self.pokemon_npc.grid(column=5,row=11)
@@ -502,7 +502,7 @@ class Application(tk.Frame):
             self.advances += self.config_json["advance_delay"]
             print("blink timeline started")
             queue = []
-            for _ in range(self.config_json["timeline_npc"]):
+            for _ in range(self.config_json["timeline_npc"]+1):
                 heapq.heappush(queue, (waituntil+1.017,0))
             for _ in range(self.config_json["pokemon_npc"]):
                 blink_int = self.rng.rangefloat(3,12) + 0.285
