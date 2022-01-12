@@ -21,7 +21,7 @@ Progress - The progress counter (defaults to 0/0) displays how many blinks have 
 
 S[0-3] - The S[0-3] box displays the state split into 4 seeds for use with chatot
 
-s[0-1] - The S[0-1] box displays the state split into 2 seeds for use with pokefinder
+S[0-1] - The S[0-1] box displays the state split into 2 seeds for use with pokefinder
 
 Advances - The Advances display shows the amount of advances since the state displayed above
 
@@ -63,7 +63,7 @@ Advance Delay - Advance Delay controls the amount of advances that happen after 
 
 Advance Delay 2 - Advance Delay 2 controls the amount of advances that happen after the second A press (currently only used for starters)
 
-NPCs - NPCs controls the amount of NPCs that are active while you are reidentifying your state (the amount of non player characters that are currently rolling for blinks, 2 from you + rival at the lake)
+NPCs - NPCs controls the amount of NPCs that are active while you are reidentifying your state (the amount of non player characters that are currently rolling for blinks, 1 your rival at the lake)
 
 NPCs during Timeline - NPCs during Timeline controls the amount of non player characters that roll for blinks during the timeline (-1 if player blinks are not rolled for, like with starters, 0 if there are no npcs)
 
