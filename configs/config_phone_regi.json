@@ -21,5 +21,6 @@
         530,
         300
     ],
-    "camera": 0
+    "camera": 0,
+    "display_percent": 80
 }

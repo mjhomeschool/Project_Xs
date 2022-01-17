@@ -154,11 +154,14 @@ class Application(tk.Frame):
         self.pokemon_npc = tk.Spinbox(self, from_= 0, to = 999, width = 5, increment=1)
         self.pokemon_npc.grid(column=7,row=11)
 
-        self.save_button = ttk.Button(self, text="Select Eye",command=self.new_eye)
-        self.save_button.grid(column=6,row=12,columnspan=2)
+        self.new_eye_button = ttk.Button(self, text="Select Eye",command=self.new_eye)
+        self.new_eye_button.grid(column=6,row=12,columnspan=2)
 
-        self.new_eye_button = ttk.Button(self, text="Save Config",command=self.save_config)
-        self.new_eye_button.grid(column=6,row=13,columnspan=2)
+        self.save_button = ttk.Button(self, text="Save Config",command=self.save_config)
+        self.save_button.grid(column=6,row=13,columnspan=2)
+
+        self.raw_screenshot_button = ttk.Button(self, text="Raw Screenshot",command=self.save_screenshot)
+        self.raw_screenshot_button.grid(column=6,row=14,columnspan=2)
 
         self.s0_1_2_3 = tk.Text(self, width=10, height=4)
         self.s0_1_2_3.grid(column=1,row=2,rowspan=4)
@@ -179,6 +182,10 @@ class Application(tk.Frame):
 
         self.advances_increase_button = ttk.Button(self, text="Advance", command=self.increase_advances)
         self.advances_increase_button.grid(column=1,row=13)
+
+        ttk.Label(self,text="Display Percent").grid(column=0,row=14)
+        self.display_percent = tk.Spinbox(self, from_ = 0, to = 500)
+        self.display_percent.grid(column=1,row=14)
 
         self.pos_x.delete(0, tk.END)
         self.pos_x.insert(0, x)
@@ -206,6 +213,8 @@ class Application(tk.Frame):
         self.camera_index.insert(0, 0)
         self.advances_increase.delete(0, tk.END)
         self.advances_increase.insert(0, 165)
+        self.display_percent.delete(0, tk.END)
+        self.display_percent.insert(0, 100)
 
         self.after_task()
     
@@ -219,6 +228,10 @@ class Application(tk.Frame):
             json.dump(self.default_config,f,indent=4)
             self.config_combobox.set(os.path.basename(f.name))
         self.config_combobox_onchange()
+
+    def save_screenshot(self):
+        with fd.asksaveasfile(initialdir="./", filetypes=[("PNG", ".png")]) as f:
+            cv2.imwrite(f.name,self.raw_screenshot)
     
     def new_eye(self):
         self.config_json["image"] = "./"+os.path.relpath(fd.askopenfilename(initialdir="./images/", filetypes=[("Image", ".png")])).replace("\\","/")
@@ -270,6 +283,8 @@ class Application(tk.Frame):
         self.prefix_input.delete(0, tk.END)
         self.prefix_input.insert(0, self.config_json["WindowPrefix"])
         self.monitor_window_var.set(self.config_json["MonitorWindow"])
+        self.display_percent.delete(0, tk.END)
+        self.display_percent.insert(0, self.config_json["display_percent"])
 
     def stop_tracking(self):
         self.tracking = False
@@ -593,12 +608,6 @@ class Application(tk.Frame):
             roi_x, roi_y, roi_w, roi_h = self.config_json["view"]
             _, frame = video.read()
             if frame is not None:
-                if not self.config_json["MonitorWindow"]:
-                    size = frame.shape[::-1]
-                    _, fw, fh = size
-                    if fw >= 1920:
-                        frame = cv2.resize(frame,(960,round(fh/fw*960)))
-
                 roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)
                 res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
                 _, match, _, max_loc = cv2.minMaxLoc(res)
@@ -610,6 +619,11 @@ class Application(tk.Frame):
                     max_loc = (max_loc[0] + roi_x,max_loc[1] + roi_y)
                     bottom_right = (max_loc[0] + w, max_loc[1] + h)
                     cv2.rectangle(frame,max_loc, bottom_right, 255, 2)
+                self.raw_screenshot = frame
+                if self.config_json["display_percent"] != 100:
+                    size = frame.shape[::-1]
+                    _, fw, fh = size
+                    frame = cv2.resize(frame,(round(fw*self.config_json["display_percent"]/100),round(fh*self.config_json["display_percent"]/100)))
                 frame_tk = self.cv_image_to_tk(frame)
                 self.monitor_tk_buffer = last_frame_tk
                 self.monitor_display_buffer['image'] = self.monitor_tk_buffer
@@ -631,6 +645,7 @@ class Application(tk.Frame):
         self.config_json["timeline_npc"] = int(self.timeline_npc.get())
         self.config_json["MonitorWindow"] = bool(self.monitor_window_var.get())
         self.config_json["camera"] = int(self.camera_index.get())
+        self.config_json["display_percent"] = int(self.display_percent.get())
         self.adv['text'] = self.advances
         self.cd['text'] = self.count_down
         self.after(100,self.after_task)
