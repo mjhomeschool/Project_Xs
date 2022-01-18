@@ -121,8 +121,7 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
                 exit()
         else:
             if tk_window.config_json["display_percent"] != 100:
-                size = frame.shape[::-1]
-                _, fw, fh = size
+                _, fw, fh = frame.shape[::-1]
                 frame = cv2.resize(frame,(round(fw*tk_window.config_json["display_percent"]/100),round(fh*tk_window.config_json["display_percent"]/100)))
             frame_tk = tk_window.cv_image_to_tk(frame)
             tk_window.monitor_tk_buffer = last_frame_tk
@@ -270,8 +269,7 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 64, th = 0.85, M
                 exit()
         else:
             if tk_window.config_json["display_percent"] != 100:
-                size = frame.shape[::-1]
-                _, fw, fh = size
+                _, fw, fh = frame.shape[::-1]
                 frame = cv2.resize(frame,(round(fw*tk_window.config_json["display_percent"]/100),round(fh*tk_window.config_json["display_percent"]/100)))
             frame_tk = tk_window.cv_image_to_tk(frame)
             tk_window.monitor_tk_buffer = last_frame_tk
