@@ -621,8 +621,7 @@ class Application(tk.Frame):
                     cv2.rectangle(frame,max_loc, bottom_right, 255, 2)
                 self.raw_screenshot = frame
                 if self.config_json["display_percent"] != 100:
-                    size = frame.shape[::-1]
-                    _, fw, fh = size
+                    _, fw, fh = frame.shape[::-1]
                     frame = cv2.resize(frame,(round(fw*self.config_json["display_percent"]/100),round(fh*self.config_json["display_percent"]/100)))
                 frame_tk = self.cv_image_to_tk(frame)
                 self.monitor_tk_buffer = last_frame_tk
