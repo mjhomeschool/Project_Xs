@@ -64,11 +64,6 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
                 tk_window.monitor_tk = None
                 exit()
         _, frame = video.read()
-        if not MonitorWindow:
-            f_size = frame.shape[::-1]
-            _, fw, fh = f_size
-            if fw >= 1920:
-                frame = cv2.resize(frame,(960,round(fh/fw*960)))
         time_counter = time.perf_counter()
         roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)
         if (roi==prev_roi).all():
@@ -129,7 +124,6 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
             tk_window.monitor_tk = frame_tk
             tk_window.monitor_display['image'] = tk_window.monitor_tk
             last_frame_tk = frame_tk
-
         if state!=IDLE and time_counter - prev_time>0.7:
             state = IDLE
     if tk_window == None:
@@ -226,11 +220,6 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 64, th = 0.85, M
                 tk_window.monitor_tk = None
                 exit()
         _, frame = video.read()
-        if not MonitorWindow:
-            f_size = frame.shape[::-1]
-            _, fw, fh = f_size
-            if fw >= 1920:
-                frame = cv2.resize(frame,(960,round(fh/fw*960)))
         time_counter = time.perf_counter()
 
         roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)
