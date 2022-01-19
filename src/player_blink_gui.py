@@ -131,6 +131,11 @@ class Application(tk.Frame):
         self.menu_check.grid(column=7,row=0)
         self.menu_check_var.set(1)
 
+        self.reident_noisy_check_var = tk.IntVar()
+        self.reident_noisy_check = ttk.Checkbutton(self, text="Reident 1 PK NPC", variable=self.reident_noisy_check_var)
+        self.reident_noisy_check.grid(column=5,row=6)
+        self.reident_noisy_check_var.set(0)
+
         self.pos_x = tk.Spinbox(self, from_= 0, to = 99999, width = 5)
         self.pos_x.grid(column=7,row=1)
         self.pos_y = tk.Spinbox(self, from_= 0, to = 99999, width = 5)
@@ -482,10 +487,18 @@ class Application(tk.Frame):
         self.s01_23.insert(1.0,s01+"\n"+s23)
 
         print([hex(x) for x in state])
-        observed_blinks, observed_intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"], size=7)
-        # self.rng, adv = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks, return_advance=True, npc=self.config_json["npc"])
-        self.rng, adv = rngtool.reidentifyByIntervals(Xorshift(*state), observed_intervals, return_advance=True, npc=self.config_json["npc"])
-
+        if self.reident_noisy_check_var.get():
+            self.pokemon_npc.delete(0,tk.END)
+            self.pokemon_npc.insert(0,1)
+            observed_blinks, observed_intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"], size=20)
+            self.rng, adv = rngtool.reidentifyByIntervalsNoisy(Xorshift(*state), observed_intervals)
+            self.timelining = True
+            self.count_down = 0
+            auto_timeline = True
+        else:
+            observed_blinks, observed_intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"], size=7)
+            self.rng, adv = rngtool.reidentifyByIntervals(Xorshift(*state), observed_intervals, return_advance=True, npc=self.config_json["npc"])
+            auto_timeline = True
 
         self.reidentify_button['text'] = "Reidentify"
         self.reidentifying = False
@@ -498,7 +511,8 @@ class Application(tk.Frame):
 
         self.advances = adv+diff*(self.config_json["npc"]+1)
         self.tracking = True
-        self.count_down = None
+        if not auto_timeline:
+            self.count_down = None
         while self.tracking:
             if self.count_down is None:
                 if self.timelining:

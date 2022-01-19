@@ -522,6 +522,41 @@ def reidentifyByIntervals(rng:Xorshift, rawintervals:List[int], npc = 0, search_
 
     return None
 
+def reidentifyByIntervalsNoisy(rng:Xorshift, rawintervals:List[int], search_max=10**5, search_min=0)->Xorshift:
+    intervals = rawintervals[1:]
+    blink_bools = [True]
+    for interval in intervals:
+        blink_bools.extend([False]*(interval-1))
+        blink_bools.append(True)
+    reident_time = len(blink_bools)
+    possible_length = int(reident_time*4//3)
+    
+    possible_advances = []
+    go = Xorshift(*rng.getState())
+    go.getNextRandSequence(search_min)
+    blink_rands = [int((r&0b1110)==0) for r in go.getNextRandSequence(search_max)]
+    for advance in range(search_max-possible_length):
+        blinks = blink_rands[advance:advance+possible_length]
+        i = 0
+        j = 0
+        differences = []
+        try:
+            while i < reident_time:
+                diff = 0
+                while blink_bools[i] != blinks[j]:
+                    diff += 1
+                    j += 1
+                if diff != 0:
+                    differences.append(diff)
+                j += 1
+                i += 1
+        except IndexError:
+            continue
+        pokemon_blink_count = sum(differences)
+        possible_advances.append((pokemon_blink_count,advance))
+    correct = min(possible_advances)
+    rng.advance(search_min+sum(correct)+reident_time)
+    return rng, search_min+sum(correct)+reident_time
 
 def recovByMunchlax(rawintervals:List[float])->Xorshift:
     """Recover the xorshift from the interval of Munchlax blinks.
