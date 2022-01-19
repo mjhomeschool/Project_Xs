@@ -482,7 +482,7 @@ class Application(tk.Frame):
         self.s01_23.insert(1.0,s01+"\n"+s23)
 
         print([hex(x) for x in state])
-        observed_blinks, observed_intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"], size=6)
+        observed_blinks, observed_intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"], size=7)
         # self.rng, adv = rngtool.reidentifyByBlinks(Xorshift(*state), observed_blinks, return_advance=True, npc=self.config_json["npc"])
         self.rng, adv = rngtool.reidentifyByIntervals(Xorshift(*state), observed_intervals, return_advance=True, npc=self.config_json["npc"])
 

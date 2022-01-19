@@ -463,14 +463,12 @@ def reidentifyByBlinks(rng:Xorshift, observed_blinks:List[int], npc = 0, search_
 def reidentifyByIntervals(rng:Xorshift, rawintervals:List[int], npc = 0, search_max=10**6, search_min=0, return_advance=False)->Xorshift:
     """reidentify Xorshift state by intervals of observed blinks. 
     This method is faster than "reidentifyByBlinks" in most cases since it can be reidentified by less blinking.
-
     Args:
         rng (Xorshift): [description]
-        rawintervals (List[int]): list of intervals of blinks. 6 or more is recommended.
+        rawintervals (List[int]): list of intervals of blinks. 7 or more are recommended.
         npc (int, optional): [description]. Defaults to 0.
         search_max ([type], optional): [description]. Defaults to 10**6.
         search_min (int, optional): [description]. Defaults to 0.
-
     Returns:
         Xorshift: [description]
     """
@@ -485,9 +483,6 @@ def reidentifyByIntervals(rng:Xorshift, rawintervals:List[int], npc = 0, search_
         blinkrands = [(i, int((r&0b1110)==0)) for i,r in list(enumerate(identify_rng.getNextRandSequence(search_max)))[d::1+npc]]
 
         #prepare
-
-
-
         expected_blinks_lst = []
         expected_blinks = 0
         lastblink_idx = -1
