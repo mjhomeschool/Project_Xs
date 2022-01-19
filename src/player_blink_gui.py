@@ -222,7 +222,7 @@ class Application(tk.Frame):
         self.display_percent.insert(0, 100)
 
         self.after_task()
-    
+     
     def increase_advances(self):
         plus = int(self.advances_increase.get())
         self.rng.advance(plus)
@@ -333,7 +333,7 @@ class Application(tk.Frame):
     def monitoring_work(self):
         self.tracking = False
         blinks, intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"])
-        self.rng = rngtool.recov(blinks, intervals)
+        self.rng = rngtool.recov(blinks, intervals, npc=self.config_json["npc"])
 
         self.monitor_blink_button['text'] = "Monitor Blinks"
         self.monitoring = False

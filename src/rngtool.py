@@ -370,31 +370,45 @@ def simultaneous_tracking(plimg, plroi:Tuple[int,int,int,int], pkimg, pkroi:Tupl
     print(intervals)
     return (blinks, intervals, offset_time)
 
-def recov(blinks:List[int],rawintervals:List[int])->Xorshift:
+def recov(blinks:List[int],rawintervals:List[int],npc:int=0)->Xorshift:
     """
     Recover the xorshift from the type and interval of blinks.
 
     Args:
         blinks (List[int]):
         intervals (List[int]):
+        npc (int):
 
     Returns:
         List[int]: internalstate
     """
     intervals = rawintervals[1:]
+    if npc != 0:
+        intervals = [x*(npc+1) for x in intervals]
     advanced_frame = sum(intervals)
     states = calc.reverseStates(blinks, intervals)
     prng = Xorshift(*states)
     states = prng.getState()
 
     #validation check
-    expected_blinks = [r&0xF for r in prng.getNextRandSequence(advanced_frame) if r&0b1110==0]
-    paired = list(zip(blinks,expected_blinks))
-    print(blinks)
-    print(expected_blinks)
-    #print(paired)
-    assert all([o==e for o,e in paired])
-
+    if npc == 0:
+        expected_blinks = [r&0xF for r in prng.getNextRandSequence(advanced_frame) if r&0b1110==0]
+        paired = list(zip(blinks,expected_blinks))
+        print(blinks)
+        print(expected_blinks)
+        assert all([o==e for o,e in paired])
+    else:
+        raise_error = True
+        for d in range(npc+1):
+            expected_blinks = [r&0xF for r in prng.getNextRandSequence(advanced_frame*npc)[d::npc+1] if r&0b1110==0]
+            paired = list(zip(blinks,expected_blinks))
+            if all([o==e for o,e in paired]):
+                raise_error = False
+                break
+        print(blinks)
+        print(expected_blinks)
+        if raise_error:
+            raise all([o==e for o,e in paired])
     result = Xorshift(*states)
     result.getNextRandSequence(advanced_frame)
     return result
