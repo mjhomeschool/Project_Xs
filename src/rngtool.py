@@ -403,6 +403,7 @@ def recov(blinks:List[int],rawintervals:List[int],npc:int=0)->Xorshift:
             expected_blinks = [r&0xF for r in prng.getNextRandSequence(advanced_frame*npc)[d::npc+1] if r&0b1110==0]
             paired = list(zip(blinks,expected_blinks))
             if all([o==e for o,e in paired]):
+                advanced_frame += d
                 raise_error = False
                 break
         print(blinks)
