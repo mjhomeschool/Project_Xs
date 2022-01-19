@@ -8,6 +8,7 @@ import sys
 import cv2
 from xorshift import Xorshift
 import calc
+from collections import Counter
 
 IDLE = 0xFF
 SINGLE = 0xF0
@@ -21,7 +22,7 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
     """measuring the type and interval of player's blinks
 
     Returns:
-        blinks:List[int],intervals:list[int],offset_time:float: [description]
+        blinks:List[int], intervals:list[int], offset_time:float
     """
 
     eye = img
@@ -55,7 +56,7 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
 
     offset_time = 0
 
-    # 瞬きの観測
+    # observe blinks
     while len(blinks)<size or state!=IDLE:
         if tk_window != None:
             if not tk_window.monitoring and not tk_window.reidentifying:
@@ -78,7 +79,7 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
             cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), 255, 2)
             if state==IDLE:
                 blinks.append(0)
-                interval = (time_counter - prev_time)/1.018
+                interval = (time_counter - prev_time)/1.017
                 interval_round = round(interval)
                 intervals.append(interval_round)
                 print(f"Adv Since Last: {round((time_counter - prev_time)/1.018)} {(time_counter - prev_time)/1.018}")
@@ -211,7 +212,7 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 64, th = 0.85, M
     w, h = eye.shape[::-1]
 
 
-    # 瞬きの観測
+    # observe blinks
     while len(intervals)<size:
         if tk_window != None:
             if not tk_window.tidsiding:
@@ -274,6 +275,100 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 64, th = 0.85, M
         last_frame_tk = None
     video.release()
     return intervals
+
+def simultaneous_tracking(plimg, plroi:Tuple[int,int,int,int], pkimg, pkroi:Tuple[int,int,int,int], plth=0.88, pkth=0.999185, size=8)->Tuple[List[int],List[int],float]:
+    """measuring type/intervals of player's blinks  and the interval of pokemon's blinks
+        note: this methods is very unstable. it not recommended to use.
+    Returns:
+        intervals:list[int],offset_time:float: [description]
+    """
+    video = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+    video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
+    video.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
+    video.set(cv2.CAP_PROP_BUFFERSIZE,1)
+
+    pl_state = IDLE
+    pk_state = IDLE
+    blinks = []
+    intervals = []
+    pl_prev = time.perf_counter()
+    pk_prev = time.perf_counter()
+
+    prev_roi = None
+    debug_txt = ""
+
+    offset_time = 0
+
+    blinkcounter = 0
+
+    # observe blinks
+    while len(blinks)<size or pl_state!=IDLE:
+        _, frame = video.read()
+        time_counter = time.perf_counter()
+
+        #player eye
+        roi_x,roi_y,roi_w,roi_h = plroi
+        roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)
+        if (roi==prev_roi).all():
+            continue
+
+        prev_roi = roi
+        res = cv2.matchTemplate(roi,plimg,cv2.TM_CCOEFF_NORMED)
+        _, match, _, _ = cv2.minMaxLoc(res)
+
+        #cv2.imshow("pl",roi)
+
+        if 0.01<match<plth:
+            if pl_state==IDLE:
+                blinks.append(0)
+                interval = (time_counter - pl_prev)/1.017
+                interval_round = round(interval)
+                interval_corrected = interval_round + blinkcounter
+                blinkcounter = 0#reset blinkcounter
+                intervals.append(interval_corrected)
+
+                if len(intervals)==size:
+                    offset_time = time_counter
+
+                #check interval 
+                check = " " if abs(interval-interval_round)<0.2 else "*"
+                debug_txt = f"{interval}"+check
+                pl_state = SINGLE
+                pl_prev = time_counter
+            elif pl_state==SINGLE:
+                #double
+                if time_counter - pl_prev>0.3:
+                    blinks[-1] = 1
+                    debug_txt = debug_txt+"d"
+                    pl_state = DOUBLE
+            elif pl_state==DOUBLE:
+                pass
+
+        if pl_state!=IDLE and time_counter - pl_prev>0.7:
+            pl_state = IDLE
+            print(debug_txt, len(blinks))
+
+        if pk_state==IDLE:
+            #poke eye
+            roi_x,roi_y,roi_w,roi_h = pkroi
+            roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)
+
+            res = cv2.matchTemplate(roi,pkimg,cv2.TM_CCORR_NORMED)#CCORR might be better?
+            _, match, _, _ = cv2.minMaxLoc(res)
+            cv2.imshow("pk",roi)
+            cv2.waitKey(1)
+            if 0.4<match<pkth:
+                #print("poke blinked!")
+                blinkcounter += 1
+                pk_prev = time_counter
+                pk_state = SINGLE
+
+        if pk_state!=IDLE and time_counter - pk_prev>0.7:
+            pk_state = IDLE
+        
+    cv2.destroyAllWindows()
+    print(intervals)
+    return (blinks, intervals, offset_time)
 
 def recov(blinks:List[int],rawintervals:List[int])->Xorshift:
     """
@@ -443,8 +538,8 @@ def recovByMunchlax(rawintervals:List[float])->Xorshift:
         Xorshift: [description]
     """
     advances = len(rawintervals)
-    intervals = [interval+0.048 for interval in rawintervals]#観測結果のずれを補正
-    intervals = intervals[1:]#最初の観測結果はノイズなのでそれ以降を使う
+    intervals = [interval+0.048 for interval in rawintervals]#Corrects for delays in observation results
+    intervals = intervals[1:]#The first observation is noise, so we use the one after that.
     states = calc.reverseStatesByMunchlax(intervals)
 
     prng = Xorshift(*states)
