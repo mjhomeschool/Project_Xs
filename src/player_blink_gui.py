@@ -499,7 +499,7 @@ class Application(tk.Frame):
         else:
             observed_blinks, observed_intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"], size=7)
             self.rng, adv = rngtool.reidentifyByIntervals(Xorshift(*state), observed_intervals, return_advance=True, npc=self.config_json["npc"])
-            auto_timeline = True
+            auto_timeline = False
 
         self.reidentify_button['text'] = "Reidentify"
         self.reidentifying = False
