@@ -42,7 +42,8 @@ class Application(tk.Frame):
             "timeline_npc": 0,
             "pokemon_npc": 0,
             "crop": [0,0,0,0],
-            "camera": 0
+            "camera": 0,
+            "display_percent": 80
         }
         self.pack()
         self.create_widgets()
