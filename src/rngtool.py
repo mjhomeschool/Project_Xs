@@ -409,7 +409,7 @@ def recov(blinks:List[int],rawintervals:List[int],npc:int=0)->Xorshift:
         print(blinks)
         print(expected_blinks)
         if raise_error:
-            raise all([o==e for o,e in paired])
+            assert all([o==e for o,e in paired])
     result = Xorshift(*states)
     result.getNextRandSequence(advanced_frame)
     return result
