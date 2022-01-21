@@ -258,6 +258,11 @@ class Application(tk.Frame):
 
     def config_combobox_onchange(self, event=None):
         self.config_json = json.load(open(join("configs",self.config_combobox.get())))
+        missing = set(self.default_config.keys()).difference(self.config_json.keys())
+        if len(missing) > 0:
+            print(f"Config was missing the following keys {missing}\nDefaults have been added")
+        for key in missing:
+            self.config_json[key] = self.default_config[key]
         x,y,w,h = self.config_json["view"]
         self.pos_x.delete(0, tk.END)
         self.pos_x.insert(0, x)
