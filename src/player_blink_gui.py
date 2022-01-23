@@ -1,17 +1,24 @@
-import cv2
-import heapq
-import json
-import os.path
-import signal
-import sys
-import threading
-import time
-import tkinter as tk
-import tkinter.filedialog as fd
-from tkinter import ttk
-from os import listdir
-from os.path import isfile, join
-from PIL import Image, ImageTk
+try:
+    import cv2
+    import heapq
+    import json
+    import os.path
+    import signal
+    import sys
+    import threading
+    import time
+    import tkinter as tk
+    import tkinter.filedialog as fd
+    from tkinter import ttk
+    from os import listdir
+    from os.path import isfile, join
+    from PIL import Image, ImageTk
+except ImportError:
+    raise Exception("Could not import the required modules, make sure you are running with the correct python version, and that packages are installed correctly.")
+
+version = sys.version_info
+if version[0] < 3 or version[1] < 7:
+    raise Exception("Incorrect python version, make sure to run with 3.7+")
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
@@ -339,15 +346,18 @@ class Application(tk.Frame):
     def monitoring_work(self):
         self.tracking = False
         blinks, intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"])
-        self.rng = rngtool.recov(blinks, intervals, npc=self.config_json["npc"])
+        try:
+            self.rng = rngtool.recov(blinks, intervals, npc=self.config_json["npc"])
+        except AssertionError:
+            raise Exception("Failed to deduce seed from monitored blinks.")
 
         self.monitor_blink_button['text'] = "Monitor Blinks"
         self.monitoring = False
         self.preview()
 
         waituntil = time.perf_counter()
-        diff = round(waituntil-offset_time)+(1 if self.menu_check_var.get() else 0)
-        self.rng.getNextRandSequence(diff*(self.config_json["npc"]+1))
+        diff = round(waituntil-offset_time)
+        self.rng.getNextRandSequence(diff*(self.config_json["npc"]+1)+(1 if self.menu_check_var.get() else 0))
 
         state = self.rng.getState()
         s0 = f"{state[0]:08X}"
@@ -474,7 +484,10 @@ class Application(tk.Frame):
     
     def reidentifying_work(self):
         self.tracking = False
-        state = [int(x,16) for x in self.s0_1_2_3.get(1.0,tk.END).split("\n")[:4]]
+        try:
+            state = [int(x,16) for x in self.s0_1_2_3.get(1.0,tk.END).split("\n")[:4]]
+        except ValueError:
+            raise Exception("Cannot pull seeds from S[0-3] for reidentification, make sure they are in hex and split by line.")
 
         s0 = f"{state[0]:08X}"
         s1 = f"{state[1]:08X}"
@@ -497,13 +510,19 @@ class Application(tk.Frame):
             self.pokemon_npc.delete(0,tk.END)
             self.pokemon_npc.insert(0,1)
             observed_blinks, observed_intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"], size=20)
-            self.rng, adv = rngtool.reidentifyByIntervalsNoisy(Xorshift(*state), observed_intervals)
+            try:
+                self.rng, adv = rngtool.reidentifyByIntervalsNoisy(Xorshift(*state), observed_intervals)
+            except (TypeError,ValueError):
+                raise Exception("Failed to reidentify from the recorded blinks.")
             self.timelining = True
             self.count_down = 0
             auto_timeline = True
         else:
             observed_blinks, observed_intervals, offset_time = rngtool.tracking_blink(self.player_eye, *self.config_json["view"], MonitorWindow=self.config_json["MonitorWindow"], WindowPrefix=self.config_json["WindowPrefix"], crop=self.config_json["crop"], camera=self.config_json["camera"], tk_window=self, th=self.config_json["thresh"], size=7)
-            self.rng, adv = rngtool.reidentifyByIntervals(Xorshift(*state), observed_intervals, return_advance=True, npc=self.config_json["npc"])
+            try:
+                self.rng, adv = rngtool.reidentifyByIntervals(Xorshift(*state), observed_intervals, return_advance=True, npc=self.config_json["npc"])
+            except TypeError:
+                raise Exception("Failed to reidentify from the recorded blinks.")
             auto_timeline = False
 
         self.reidentify_button['text'] = "Reidentify"
@@ -511,8 +530,8 @@ class Application(tk.Frame):
         self.preview()
 
         waituntil = time.perf_counter()
-        diff = round(waituntil-offset_time)+(1 if self.menu_check_var.get() else 0)
-        self.rng.getNextRandSequence(diff*(self.config_json["npc"]+1))
+        diff = round(waituntil-offset_time)
+        self.rng.getNextRandSequence(diff*(self.config_json["npc"]+1)+(1 if self.menu_check_var.get() else 0))
         state = self.rng.getState()
 
         self.advances = adv+diff*(self.config_json["npc"]+1)

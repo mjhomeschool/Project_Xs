@@ -1,5 +1,8 @@
 import numpy as np
-import win32gui, win32ui, win32con
+try:
+    import win32gui, win32ui, win32con
+except ImportError:
+    raise Exception("Could not import win32, if you are not on windows Monitor Window must be unchecked, otherwise make sure packages are installed correctly.")
 
 # Class to monitor a window
 class WindowCapture:
@@ -57,7 +60,10 @@ class WindowCapture:
         dcObj = win32ui.CreateDCFromHandle(wDC)
         cDC = dcObj.CreateCompatibleDC()
         dataBitMap = win32ui.CreateBitmap()
-        dataBitMap.CreateCompatibleBitmap(dcObj, self.w, self.h)
+        try:
+            dataBitMap.CreateCompatibleBitmap(dcObj, self.w, self.h)
+        except win32ui.error:
+            raise Exception("Failed to pull input from target window, make sure nothing else is accessing the window (stop preview before monitoring blinks).")
         cDC.SelectObject(dataBitMap)
         cDC.BitBlt((0, 0), (self.w, self.h), dcObj, (self.cropped_x, self.cropped_y), win32con.SRCCOPY)
 
