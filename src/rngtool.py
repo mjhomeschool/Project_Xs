@@ -8,15 +8,15 @@ import sys
 import cv2
 from xorshift import Xorshift
 import calc
-from collections import Counter
 
 IDLE = 0xFF
 SINGLE = 0xF0
 DOUBLE = 0xF1
 
-def randrange(r,mi,ma):
-    t = (r & 0x7fffff) / 8388607.0
-    return t * mi + (1.0 - t) * ma
+def randrange(rand,minimum,maximum):
+    """Convert a random number into a range between two floats"""
+    rand = (rand & 0x7fffff) / 8388607.0
+    return rand * minimum + (1.0 - rand) * maximum
 
 def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, MonitorWindow = False, WindowPrefix = "SysDVR-Client [PID ", crop = None, camera = 0, tk_window = None)->Tuple[List[int],List[int],float]:
     """measuring the type and interval of player's blinks
@@ -34,11 +34,7 @@ def tracking_blink(img, roi_x, roi_y, roi_w, roi_h, th = 0.9, size = 40, Monitor
     else:
         if sys.platform.startswith('linux'): # all Linux
             backend = cv2.CAP_V4L
-        elif sys.platform.startswith('win'): # MS Windows
-            backend = cv2.CAP_DSHOW
-        elif sys.platform.startswith('darwin'): # macOS
-            backend = cv2.CAP_ANY
-        else:
+        else: # MS Windows/macOS/otherwise
             backend = cv2.CAP_ANY # auto-detect via OpenCV
         video = cv2.VideoCapture(camera,backend)
         video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
@@ -194,11 +190,7 @@ def tracking_poke_blink(img, roi_x, roi_y, roi_w, roi_h, size = 64, th = 0.85, M
     else:
         if sys.platform.startswith('linux'): # all Linux
             backend = cv2.CAP_V4L
-        elif sys.platform.startswith('win'): # MS Windows
-            backend = cv2.CAP_DSHOW
-        elif sys.platform.startswith('darwin'): # macOS
-            backend = cv2.CAP_ANY
-        else:
+        else: # MS Windows/macOS/otherwise
             backend = cv2.CAP_ANY # auto-detect via OpenCV
         video = cv2.VideoCapture(camera,backend)
         video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
