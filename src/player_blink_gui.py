@@ -415,8 +415,7 @@ class PlayerBlinkGUI(tk.Frame):
         waituntil = time.perf_counter()
         diff = round(waituntil-offset_time)
         self.rng.getNextRandSequence(diff
-            * (self.config_json["npc"] + 1)
-            + (1 if self.menu_check_var.get() else 0))
+            * (self.config_json["npc"] + 1))
 
         state = self.rng.getState()
 
@@ -428,7 +427,7 @@ class PlayerBlinkGUI(tk.Frame):
         self.s0_1_2_3.insert(1.0,f"{state[0]:08X}\n{state[1]:08X}\n{state[2]:08X}\n{state[3]:08X}")
         self.s01_23.insert(1.0,f"{state[0]:08X}{state[1]:08X}\n{state[2]:08X}{state[3]:08X}")
 
-        self.advances = 0
+        self.advances = (1 if self.menu_check_var.get() else 0)
         self.tracking = True
         self.count_down = None
         while self.tracking:
@@ -451,6 +450,8 @@ class PlayerBlinkGUI(tk.Frame):
             time.sleep(next_time)
         if self.timelining:
             self.rng.next()
+            if self.menu_check_var.get():
+                self.rng.next()
             # white screen
             time.sleep(self.config_json["white_delay"])
             waituntil = time.perf_counter()
@@ -602,11 +603,13 @@ class PlayerBlinkGUI(tk.Frame):
         waituntil = time.perf_counter()
         diff = round(waituntil-offset_time)
         self.rng.getNextRandSequence(diff
-            * (self.config_json["npc"] + 1)
-            + (1 if self.menu_check_var.get() else 0))
+            * (self.config_json["npc"] + 1))
         state = self.rng.getState()
 
-        self.advances = adv+diff*(self.config_json["npc"]+1)
+        self.advances = adv \
+            + diff \
+            * (self.config_json["npc"] + 1) \
+            + (1 if self.menu_check_var.get() else 0)
         self.tracking = True
         if not self.reident_noisy_check_var.get():
             self.count_down = None
@@ -630,6 +633,8 @@ class PlayerBlinkGUI(tk.Frame):
             time.sleep(next_time)
         if self.timelining:
             self.rng.next()
+            if self.menu_check_var.get():
+                self.rng.next()
             # white screen
             time.sleep(self.config_json["white_delay"])
             waituntil = time.perf_counter()
