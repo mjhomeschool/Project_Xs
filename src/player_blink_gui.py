@@ -506,7 +506,10 @@ class PlayerBlinkGUI(tk.Frame):
                                           tk_window=self,
                                           th=self.config_json["thresh"],
                                           size=64)
-        self.rng = rngtool.recovByMunchlax(munchlax_intervals)
+        try:
+            self.rng = rngtool.recovByMunchlax(munchlax_intervals)
+        except (AssertionError,IndexError) as failed_deduction:
+            raise Exception("Failed to deduce seed from monitored blinks.") from failed_deduction
         state = self.rng.getState()
 
         self.tidsid_button['text'] = "TID/SID"
