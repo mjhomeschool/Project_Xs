@@ -18,9 +18,9 @@ try:
     from xorshift import Xorshift
 except ImportError as import_fail:
     raise \
-    Exception("Could not import the required modules, \
-               make sure you are running with the correct python version, \
-               and that packages are installed correctly.") \
+    Exception("Could not import the required modules, " \
+              "make sure you are running with the correct python version, " \
+              "and that packages are installed correctly.") \
     from import_fail
 
 version = sys.version_info
@@ -545,8 +545,8 @@ class PlayerBlinkGUI(tk.Frame):
         try:
             state = [int(x,16) for x in self.s0_1_2_3.get(1.0,tk.END).split("\n")[:4]]
         except ValueError as bad_input:
-            raise Exception("Cannot pull seeds from S[0-3] for reidentification, \
-                make sure they are in hex and split by line.") from bad_input
+            raise Exception("Cannot pull seeds from S[0-3] for reidentification, " \
+                            "make sure they are in hex and split by line.") from bad_input
 
         print(f"{state[0]:08X}{state[1]:08X} {state[2]:08X}{state[3]:08X}")
         print(f"{state[0]:08X} {state[1]:08X} {state[2]:08X} {state[3]:08X}")
@@ -735,10 +735,17 @@ class PlayerBlinkGUI(tk.Frame):
                     roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],
                                        cv2.COLOR_RGB2GRAY)
                 except cv2.error as empty_frame:
-                    raise Exception("Frame captured is empty, \
-                                     make sure your camera/window is set up properly.") \
+                    raise Exception("Frame captured is empty, " \
+                                    "make sure your camera/window is set up properly.") \
                     from empty_frame
-                res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
+                try:
+                    res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
+                except cv2.error as bad_location:
+                    raise Exception("Tried to read from out of the bounds of " \
+                                    "the image read from camera/window, " \
+                                    "make sure the position of " \
+                                    "the monitoring box is not out of bounds.") \
+                    from bad_location
                 _, match, _, max_loc = cv2.minMaxLoc(res)
 
                 cv2.rectangle(frame,(roi_x,roi_y), (roi_x+roi_w,roi_y+roi_h), (0,0,255), 2)
