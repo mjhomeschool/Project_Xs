@@ -727,9 +727,17 @@ class PlayerBlinkGUI(tk.Frame):
             eye = self.player_eye
             eye_width, eye_height = eye.shape[::-1]
             roi_x, roi_y, roi_w, roi_h = self.config_json["view"]
+            if roi_w < eye_width or roi_h < eye_height:
+                raise Exception("Width and Height of box cannot be smaller than selected eye image")
             _, frame = video.read()
             if frame is not None:
-                roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],cv2.COLOR_RGB2GRAY)
+                try:
+                    roi = cv2.cvtColor(frame[roi_y:roi_y+roi_h,roi_x:roi_x+roi_w],
+                                       cv2.COLOR_RGB2GRAY)
+                except cv2.error as empty_frame:
+                    raise Exception("Frame captured is empty, \
+                                     make sure your camera/window is set up properly.") \
+                    from empty_frame
                 res = cv2.matchTemplate(roi,eye,cv2.TM_CCOEFF_NORMED)
                 _, match, _, max_loc = cv2.minMaxLoc(res)
 
