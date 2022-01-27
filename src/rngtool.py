@@ -43,7 +43,7 @@ def tracking_blink(img,
 
     if monitor_window:
         # pylint: disable=import-outside-toplevel
-        # we import here because otherwise it would through an error on non windows platforms
+        # we import here because otherwise it would throw an error on non windows platforms
         from windowcapture import WindowCapture
         video = WindowCapture(window_prefix,crop)
     else:
@@ -209,7 +209,7 @@ def tracking_poke_blink(img,
 
     if monitor_window:
         # pylint: disable=import-outside-toplevel
-        # we import here because otherwise it would through an error on non windows platforms
+        # we import here because otherwise it would throw an error on non windows platforms
         from windowcapture import WindowCapture
         video = WindowCapture(window_prefix, crop)
     else:

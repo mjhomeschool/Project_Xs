@@ -701,7 +701,7 @@ class PlayerBlinkGUI(tk.Frame):
 
         if self.config_json["MonitorWindow"]:
             # pylint: disable=import-outside-toplevel
-            # we import here because otherwise it would through an error on non windows platforms
+            # we import here because otherwise it would throw an error on non windows platforms
             from windowcapture import WindowCapture
             video = WindowCapture(self.config_json["WindowPrefix"],self.config_json["crop"])
         else:
