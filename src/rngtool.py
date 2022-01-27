@@ -378,7 +378,7 @@ def recov(blinks:List[int],rawintervals:List[int],npc:int=0)->Xorshift:
     if npc != 0:
         intervals = [x*(npc+1) for x in intervals]
     advanced_frame = sum(intervals)
-    states = calc.reverseStates(blinks, intervals)
+    states = calc.reverse_states(blinks, intervals)
     prng = Xorshift(*states)
     states = prng.getState()
 
@@ -577,7 +577,7 @@ def recovByMunchlax(rawintervals:List[float])->Xorshift:
     advances = len(rawintervals)
     intervals = [interval+0.048 for interval in rawintervals]#Corrects for delays in observation results
     intervals = intervals[1:]#The first observation is noise, so we use the one after that.
-    states = calc.reverseStatesByMunchlax(intervals)
+    states = calc.reverse_states_by_munchlax(intervals)
 
     prng = Xorshift(*states)
     states = prng.getState()
