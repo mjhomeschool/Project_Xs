@@ -397,12 +397,12 @@ class PlayerBlinkGUI(tk.Frame):
         intervals, \
         offset_time = rngtool.tracking_blink(self.player_eye,
                                             *self.config_json["view"],
-                                            MonitorWindow=self.config_json["MonitorWindow"],
-                                            WindowPrefix=self.config_json["WindowPrefix"],
+                                            monitor_window=self.config_json["MonitorWindow"],
+                                            window_prefix=self.config_json["WindowPrefix"],
                                             crop=self.config_json["crop"],
                                             camera=self.config_json["camera"],
                                             tk_window=self,
-                                            th=self.config_json["thresh"])
+                                            threshold=self.config_json["thresh"])
         try:
             self.rng = rngtool.recov(blinks, intervals, npc=self.config_json["npc"])
         except AssertionError as failed_deduction:
@@ -414,10 +414,10 @@ class PlayerBlinkGUI(tk.Frame):
 
         waituntil = time.perf_counter()
         diff = round(waituntil-offset_time)
-        self.rng.getNextRandSequence(diff
+        self.rng.get_next_rand_sequence(diff
             * (self.config_json["npc"] + 1))
 
-        state = self.rng.getState()
+        state = self.rng.get_state()
 
         print(f"{state[0]:08X}{state[1]:08X} {state[2]:08X}{state[3]:08X}")
         print(f"{state[0]:08X} {state[1]:08X} {state[2]:08X} {state[3]:08X}")
@@ -441,7 +441,7 @@ class PlayerBlinkGUI(tk.Frame):
                 break
 
             self.advances += self.config_json["npc"]+1
-            rand = self.rng.getNextRandSequence(self.config_json["npc"]+1)[-1]
+            rand = self.rng.get_next_rand_sequence(self.config_json["npc"]+1)[-1]
             waituntil += 1.018
 
             print(f"advances:{self.advances}, blinks:{hex(rand&0xF)}")
@@ -499,18 +499,18 @@ class PlayerBlinkGUI(tk.Frame):
         munchlax_intervals \
             = rngtool.tracking_poke_blink(self.player_eye,
                                           *self.config_json["view"],
-                                          MonitorWindow=self.config_json["MonitorWindow"],
-                                          WindowPrefix=self.config_json["WindowPrefix"],
+                                          monitor_window=self.config_json["MonitorWindow"],
+                                          window_prefix=self.config_json["WindowPrefix"],
                                           crop=self.config_json["crop"],
                                           camera=self.config_json["camera"],
                                           tk_window=self,
-                                          th=self.config_json["thresh"],
+                                          threshold=self.config_json["thresh"],
                                           size=64)
         try:
-            self.rng = rngtool.recovByMunchlax(munchlax_intervals)
+            self.rng = rngtool.recov_by_munchlax(munchlax_intervals)
         except (AssertionError,IndexError) as failed_deduction:
             raise Exception("Failed to deduce seed from monitored blinks.") from failed_deduction
-        state = self.rng.getState()
+        state = self.rng.get_state()
 
         self.tidsid_button['text'] = "TID/SID"
         self.tidsiding = False
@@ -563,15 +563,15 @@ class PlayerBlinkGUI(tk.Frame):
             observed_intervals, \
             offset_time = rngtool.tracking_blink(self.player_eye,
                                                  *self.config_json["view"],
-                                                 MonitorWindow=self.config_json["MonitorWindow"],
-                                                 WindowPrefix=self.config_json["WindowPrefix"],
+                                                 monitor_window=self.config_json["MonitorWindow"],
+                                                 window_prefix=self.config_json["WindowPrefix"],
                                                  crop=self.config_json["crop"],
                                                  camera=self.config_json["camera"],
                                                  tk_window=self,
-                                                 th=self.config_json["thresh"],
+                                                 threshold=self.config_json["thresh"],
                                                  size=20)
             try:
-                self.rng, adv = rngtool.reidentifyByIntervalsNoisy(Xorshift(*state),
+                self.rng, adv = rngtool.reidentiy_by_intervals_noisy(Xorshift(*state),
                                                                    observed_intervals)
             except (TypeError,ValueError) as failed_deduction:
                 raise Exception("Failed to reidentify from the recorded blinks.") \
@@ -583,15 +583,15 @@ class PlayerBlinkGUI(tk.Frame):
             observed_intervals, \
             offset_time = rngtool.tracking_blink(self.player_eye,
                                                  *self.config_json["view"],
-                                                 MonitorWindow=self.config_json["MonitorWindow"],
-                                                 WindowPrefix=self.config_json["WindowPrefix"],
+                                                 monitor_window=self.config_json["MonitorWindow"],
+                                                 window_prefix=self.config_json["WindowPrefix"],
                                                  crop=self.config_json["crop"],
                                                  camera=self.config_json["camera"],
                                                  tk_window=self,
-                                                 th=self.config_json["thresh"],
+                                                 threshold=self.config_json["thresh"],
                                                  size=7)
             try:
-                self.rng, adv = rngtool.reidentifyByIntervals(Xorshift(*state),
+                self.rng, adv = rngtool.reidentiy_by_intervals(Xorshift(*state),
                                                               observed_intervals,
                                                               return_advance=True,
                                                               npc=self.config_json["npc"])
@@ -605,9 +605,9 @@ class PlayerBlinkGUI(tk.Frame):
 
         waituntil = time.perf_counter()
         diff = round(waituntil-offset_time)
-        self.rng.getNextRandSequence(diff
+        self.rng.get_next_rand_sequence(diff
             * (self.config_json["npc"] + 1))
-        state = self.rng.getState()
+        state = self.rng.get_state()
 
         self.advances = adv \
             + diff \
@@ -627,7 +627,7 @@ class PlayerBlinkGUI(tk.Frame):
                 break
 
             self.advances += self.config_json["npc"]+1
-            rand = self.rng.getNextRandSequence(self.config_json["npc"]+1)[-1]
+            rand = self.rng.get_next_rand_sequence(self.config_json["npc"]+1)[-1]
             waituntil += 1.018
 
             print(f"advances:{self.advances}, blinks:{hex(rand&0xF)}")

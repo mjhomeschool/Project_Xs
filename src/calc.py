@@ -122,7 +122,7 @@ def list2bitvec(lst):
     bitvec = reduce(lambda p,q: (int(p)<<1)|int(q),lst)
     return bitvec
 
-def reverse_states(rawblinks:list, intervals:list)->int:
+def reverse_states(rawblinks:list, intervals:list)->list:
     """Deduce state of Xorshift random number generator using player blinks and intervals"""
     blinks = []
     for blink in rawblinks:
