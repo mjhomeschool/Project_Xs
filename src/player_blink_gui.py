@@ -11,6 +11,7 @@ try:
     import time
     import tkinter as tk
     import tkinter.filedialog as fd
+    from pyautogui import press
     from tkinter import ttk
     from os import listdir
     from os.path import isfile, join
@@ -92,7 +93,7 @@ class PlayerBlinkGUI(tk.Frame):
         ttk.Label(self,text="S[0-1]:").grid(column=0,row=7)
         ttk.Label(self,text="Advances:").grid(column=0,row=10)
         ttk.Label(self,text="Timer:").grid(column=0,row=11)
-        ttk.Label(self,text="X to advance:").grid(column=0,row=12)
+        ttk.Label(self,text="Keypress Advance:").grid(column=0,row=12)
 
         self.progress = ttk.Label(self,text="0/0")
         self.progress.grid(column=1,row=0)
@@ -220,9 +221,9 @@ class PlayerBlinkGUI(tk.Frame):
         self.advances_increase = tk.Spinbox(self, from_ = 0, to = 999999)
         self.advances_increase.grid(column=1,row=12)
 
-        self.advances_increase_button = ttk.Button(self, text="Advance", \
-            command=self.increase_advances)
-        self.advances_increase_button.grid(column=1,row=13)
+        # self.advances_increase_button = ttk.Button(self, text="Advance", \
+        #     command=self.increase_advances)
+        # self.advances_increase_button.grid(column=1,row=13)
 
         ttk.Label(self,text="Display Percent").grid(column=0,row=14)
         self.display_percent = tk.Spinbox(self, from_ = 0, to = 500)
@@ -441,6 +442,9 @@ class PlayerBlinkGUI(tk.Frame):
                 break
 
             self.advances += self.config_json["npc"]+1
+            if self.advances == int(self.advances_increase.get()):
+                press("pgup")
+                print("Pressing pgup")
             rand = self.rng.get_next_rand_sequence(self.config_json["npc"]+1)[-1]
             waituntil += 1.018
 
@@ -468,6 +472,9 @@ class PlayerBlinkGUI(tk.Frame):
             self.count_down = 10
             while queue and self.tracking:
                 self.advances += 1
+                if self.advances == int(self.advances_increase.get()):
+                    press("pgup")
+                    print("Pressing pgup")
                 wait, advance_type = heapq.heappop(queue)
                 next_time = wait - time.perf_counter() or 0
                 if next_time>0:
@@ -627,6 +634,9 @@ class PlayerBlinkGUI(tk.Frame):
                 break
 
             self.advances += self.config_json["npc"]+1
+            if self.advances == int(self.advances_increase.get()):
+                press("pgup")
+                print("Pressing pgup")
             rand = self.rng.get_next_rand_sequence(self.config_json["npc"]+1)[-1]
             waituntil += 1.018
 
