@@ -175,6 +175,15 @@ class PlayerBlinkGUI(tk.Frame):
         self.reident_noisy_check.grid(column=5,row=6)
         self.reident_noisy_check_var.set(0)
 
+        ttk.Label(self,text="Reident Min:").grid(column=4,row=7)
+        self.reident_min = tk.Spinbox(self, from_= 0, to = 9999999999)
+        self.reident_min.grid(column=5,row=7)
+        ttk.Label(self,text="Reident Max:").grid(column=4,row=8)
+        self.reident_max = tk.Spinbox(self, from_= 0, to = 9999999999)
+        self.reident_max.grid(column=5,row=8)
+        self.reident_max.delete(0, tk.END)
+        self.reident_max.insert(0, 1000000)
+
         self.pos_x = tk.Spinbox(self, from_= 0, to = 99999, width = 5)
         self.pos_x.grid(column=7,row=1)
         self.pos_y = tk.Spinbox(self, from_= 0, to = 99999, width = 5)
@@ -570,7 +579,15 @@ class PlayerBlinkGUI(tk.Frame):
         self.s0_1_2_3.insert(1.0,f"{state[0]:08X}\n{state[1]:08X}\n{state[2]:08X}\n{state[3]:08X}")
         self.s01_23.insert(1.0,f"{state[0]:08X}{state[1]:08X}\n{state[2]:08X}{state[3]:08X}")
 
+        reident_range = int(self.reident_max.get()) - int(self.reident_min.get())
         if self.reident_noisy_check_var.get():
+            if reident_range > 100000:
+                cont = tk.messagebox.askyesno("Warning",
+                    f"Reidentification range is {reident_range} " \
+                    "which is past the recommended limit of 100000 for 1 PK NPC, " \
+                    "results may be inaccurate. Continue?")
+                if not cont:
+                    return
             self.pokemon_npc.delete(0,tk.END)
             self.pokemon_npc.insert(0,1)
             _, \
@@ -586,13 +603,24 @@ class PlayerBlinkGUI(tk.Frame):
                                                  size=20)
             try:
                 self.rng, adv = rngtool.reidentiy_by_intervals_noisy(Xorshift(*state),
-                                                                   observed_intervals)
+                                                                   observed_intervals,
+                                                                   search_min= \
+                                                                       int(self.reident_min.get()),
+                                                                   search_max= \
+                                                                       int(self.reident_max.get()))
             except (TypeError,ValueError) as failed_deduction:
                 raise Exception("Failed to reidentify from the recorded blinks.") \
                     from failed_deduction
             self.timelining = True
             self.count_down = 0
         else:
+            if reident_range > 1000000:
+                cont = tk.messagebox.askyesno("Warning",
+                    f"Reidentification range is {reident_range} " \
+                    "which is past the recommended limit of 1000000 for normal reidentification, " \
+                    "results may be inaccurate. Continue?")
+                if not cont:
+                    return
             _, \
             observed_intervals, \
             offset_time = rngtool.tracking_blink(self.player_eye,
@@ -608,7 +636,11 @@ class PlayerBlinkGUI(tk.Frame):
                 self.rng, adv = rngtool.reidentiy_by_intervals(Xorshift(*state),
                                                               observed_intervals,
                                                               return_advance=True,
-                                                              npc=self.config_json["npc"])
+                                                              npc=self.config_json["npc"],
+                                                              search_min= \
+                                                                  int(self.reident_min.get()),
+                                                              search_max= \
+                                                                  int(self.reident_max.get()))
             except TypeError as failed_deduction:
                 raise Exception("Failed to reidentify from the recorded blinks.") \
                     from failed_deduction
