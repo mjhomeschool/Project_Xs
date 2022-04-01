@@ -4,6 +4,7 @@ try:
     import heapq
     import json
     import os.path
+    import os
     import rngtool
     import signal
     import sys
@@ -29,6 +30,8 @@ if version[0] < 3 or version[1] < 7:
     raise Exception("Incorrect python version, make sure to run with 3.7+")
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+# solves camera start up issues
+os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 # pylint: disable=too-many-instance-attributes
 # this many instance attributes are appropriate
@@ -93,7 +96,8 @@ class PlayerBlinkGUI(tk.Frame):
         ttk.Label(self,text="S[0-1]:").grid(column=0,row=7)
         ttk.Label(self,text="Advances:").grid(column=0,row=10)
         ttk.Label(self,text="Timer:").grid(column=0,row=11)
-        ttk.Label(self,text="Keypress Advance:").grid(column=0,row=12)
+        ttk.Label(self,text="X to Advance:").grid(column=0,row=12)
+        ttk.Label(self,text="Keypress Advance:").grid(column=0,row=14)
 
         self.progress = ttk.Label(self,text="0/0")
         self.progress.grid(column=1,row=0)
@@ -221,13 +225,16 @@ class PlayerBlinkGUI(tk.Frame):
         self.advances_increase = tk.Spinbox(self, from_ = 0, to = 999999)
         self.advances_increase.grid(column=1,row=12)
 
-        # self.advances_increase_button = ttk.Button(self, text="Advance", \
-        #     command=self.increase_advances)
-        # self.advances_increase_button.grid(column=1,row=13)
+        self.advances_increase_button = ttk.Button(self, text="Advance", \
+            command=self.increase_advances)
+        self.advances_increase_button.grid(column=1,row=13)
 
-        ttk.Label(self,text="Display Percent").grid(column=0,row=14)
+        self.keypress_advance = tk.Spinbox(self, from_ = 0, to = 999999)
+        self.keypress_advance.grid(column=1,row=14)
+
+        ttk.Label(self,text="Display Percent").grid(column=0,row=15)
         self.display_percent = tk.Spinbox(self, from_ = 0, to = 500)
-        self.display_percent.grid(column=1,row=14)
+        self.display_percent.grid(column=1,row=15)
 
         self.pos_x.delete(0, tk.END)
         self.pos_x.insert(0, 0)
@@ -442,7 +449,7 @@ class PlayerBlinkGUI(tk.Frame):
                 break
 
             self.advances += self.config_json["npc"]+1
-            if self.advances == int(self.advances_increase.get()):
+            if self.advances == int(self.keypress_advance.get()):
                 press("pgup")
                 print("Pressing pgup")
             rand = self.rng.get_next_rand_sequence(self.config_json["npc"]+1)[-1]
@@ -472,7 +479,7 @@ class PlayerBlinkGUI(tk.Frame):
             self.count_down = 10
             while queue and self.tracking:
                 self.advances += 1
-                if self.advances == int(self.advances_increase.get()):
+                if self.advances == int(self.keypress_advance.get()):
                     press("pgup")
                     print("Pressing pgup")
                 wait, advance_type = heapq.heappop(queue)
@@ -634,7 +641,7 @@ class PlayerBlinkGUI(tk.Frame):
                 break
 
             self.advances += self.config_json["npc"]+1
-            if self.advances == int(self.advances_increase.get()):
+            if self.advances == int(self.keypress_advance.get()):
                 press("pgup")
                 print("Pressing pgup")
             rand = self.rng.get_next_rand_sequence(self.config_json["npc"]+1)[-1]
