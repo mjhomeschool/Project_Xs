@@ -271,6 +271,8 @@ class PlayerBlinkGUI(tk.Frame):
         self.camera_index.insert(0, 0)
         self.advances_increase.delete(0, tk.END)
         self.advances_increase.insert(0, 165)
+        self.keypress_advance.delete(0, tk.END)
+        self.keypress_advance.insert(0, -1)
         self.display_percent.delete(0, tk.END)
         self.display_percent.insert(0, 100)
 
