@@ -1,10 +1,12 @@
 """GUI Application for blink detection and seed identification"""
 try:
-    import cv2
     import heapq
     import json
     import os.path
     import os
+    # solves camera start up issues, must be done before importing cv2
+    os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
+    import cv2
     import rngtool
     import signal
     import sys
@@ -30,8 +32,6 @@ if version[0] < 3 or version[1] < 7:
     raise Exception("Incorrect python version, make sure to run with 3.7+")
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-# solves camera start up issues
-os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 # pylint: disable=too-many-instance-attributes
 # this many instance attributes are appropriate
@@ -566,6 +566,7 @@ class PlayerBlinkGUI(tk.Frame):
 
     def reidentifying_work(self):
         """Thread work to be done for the reidentify function"""
+        # pylint: disable=too-many-locals
         self.tracking = False
         try:
             state = [int(x,16) for x in self.s0_1_2_3.get(1.0,tk.END).split("\n")[:4]]
