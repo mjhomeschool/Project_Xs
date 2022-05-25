@@ -1,9 +1,12 @@
 """GUI Application for blink detection and seed identification"""
 try:
-    import cv2
     import heapq
     import json
     import os.path
+    import os
+    # solves camera start up issues, must be done before importing cv2
+    os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
+    import cv2
     import rngtool
     import signal
     import sys
@@ -11,6 +14,7 @@ try:
     import time
     import tkinter as tk
     import tkinter.filedialog as fd
+    from pyautogui import press
     from tkinter import ttk
     from os import listdir
     from os.path import isfile, join
@@ -92,7 +96,8 @@ class PlayerBlinkGUI(tk.Frame):
         ttk.Label(self,text="S[0-1]:").grid(column=0,row=7)
         ttk.Label(self,text="Advances:").grid(column=0,row=10)
         ttk.Label(self,text="Timer:").grid(column=0,row=11)
-        ttk.Label(self,text="X to advance:").grid(column=0,row=12)
+        ttk.Label(self,text="X to Advance:").grid(column=0,row=12)
+        ttk.Label(self,text="Keypress Advance:").grid(column=0,row=14)
 
         self.progress = ttk.Label(self,text="0/0")
         self.progress.grid(column=1,row=0)
@@ -170,6 +175,15 @@ class PlayerBlinkGUI(tk.Frame):
         self.reident_noisy_check.grid(column=5,row=6)
         self.reident_noisy_check_var.set(0)
 
+        ttk.Label(self,text="Reident Min:").grid(column=4,row=7)
+        self.reident_min = tk.Spinbox(self, from_= 0, to = 9999999999)
+        self.reident_min.grid(column=5,row=7)
+        ttk.Label(self,text="Reident Max:").grid(column=4,row=8)
+        self.reident_max = tk.Spinbox(self, from_= 0, to = 9999999999)
+        self.reident_max.grid(column=5,row=8)
+        self.reident_max.delete(0, tk.END)
+        self.reident_max.insert(0, 1000000)
+
         self.pos_x = tk.Spinbox(self, from_= 0, to = 99999, width = 5)
         self.pos_x.grid(column=7,row=1)
         self.pos_y = tk.Spinbox(self, from_= 0, to = 99999, width = 5)
@@ -224,9 +238,12 @@ class PlayerBlinkGUI(tk.Frame):
             command=self.increase_advances)
         self.advances_increase_button.grid(column=1,row=13)
 
-        ttk.Label(self,text="Display Percent").grid(column=0,row=14)
+        self.keypress_advance = tk.Spinbox(self, from_ = 0, to = 999999)
+        self.keypress_advance.grid(column=1,row=14)
+
+        ttk.Label(self,text="Display Percent").grid(column=0,row=15)
         self.display_percent = tk.Spinbox(self, from_ = 0, to = 500)
-        self.display_percent.grid(column=1,row=14)
+        self.display_percent.grid(column=1,row=15)
 
         self.pos_x.delete(0, tk.END)
         self.pos_x.insert(0, 0)
@@ -254,6 +271,8 @@ class PlayerBlinkGUI(tk.Frame):
         self.camera_index.insert(0, 0)
         self.advances_increase.delete(0, tk.END)
         self.advances_increase.insert(0, 165)
+        self.keypress_advance.delete(0, tk.END)
+        self.keypress_advance.insert(0, -1)
         self.display_percent.delete(0, tk.END)
         self.display_percent.insert(0, 100)
 
@@ -441,6 +460,9 @@ class PlayerBlinkGUI(tk.Frame):
                 break
 
             self.advances += self.config_json["npc"]+1
+            if self.advances == int(self.keypress_advance.get()):
+                press("pgup")
+                print("Pressing pgup")
             rand = self.rng.get_next_rand_sequence(self.config_json["npc"]+1)[-1]
             waituntil += 1.018
 
@@ -468,6 +490,9 @@ class PlayerBlinkGUI(tk.Frame):
             self.count_down = 10
             while queue and self.tracking:
                 self.advances += 1
+                if self.advances == int(self.keypress_advance.get()):
+                    press("pgup")
+                    print("Pressing pgup")
                 wait, advance_type = heapq.heappop(queue)
                 next_time = wait - time.perf_counter() or 0
                 if next_time>0:
@@ -541,6 +566,7 @@ class PlayerBlinkGUI(tk.Frame):
 
     def reidentifying_work(self):
         """Thread work to be done for the reidentify function"""
+        # pylint: disable=too-many-locals
         self.tracking = False
         try:
             state = [int(x,16) for x in self.s0_1_2_3.get(1.0,tk.END).split("\n")[:4]]
@@ -556,7 +582,15 @@ class PlayerBlinkGUI(tk.Frame):
         self.s0_1_2_3.insert(1.0,f"{state[0]:08X}\n{state[1]:08X}\n{state[2]:08X}\n{state[3]:08X}")
         self.s01_23.insert(1.0,f"{state[0]:08X}{state[1]:08X}\n{state[2]:08X}{state[3]:08X}")
 
+        reident_range = int(self.reident_max.get()) - int(self.reident_min.get())
         if self.reident_noisy_check_var.get():
+            if reident_range > 100000:
+                cont = tk.messagebox.askyesno("Warning",
+                    f"Reidentification range is {reident_range} " \
+                    "which is past the recommended limit of 100000 for 1 PK NPC, " \
+                    "results may be inaccurate. Continue?")
+                if not cont:
+                    return
             self.pokemon_npc.delete(0,tk.END)
             self.pokemon_npc.insert(0,1)
             _, \
@@ -572,13 +606,24 @@ class PlayerBlinkGUI(tk.Frame):
                                                  size=20)
             try:
                 self.rng, adv = rngtool.reidentiy_by_intervals_noisy(Xorshift(*state),
-                                                                   observed_intervals)
+                                                                   observed_intervals,
+                                                                   search_min= \
+                                                                       int(self.reident_min.get()),
+                                                                   search_max= \
+                                                                       int(self.reident_max.get()))
             except (TypeError,ValueError) as failed_deduction:
                 raise Exception("Failed to reidentify from the recorded blinks.") \
                     from failed_deduction
             self.timelining = True
             self.count_down = 0
         else:
+            if reident_range > 1000000:
+                cont = tk.messagebox.askyesno("Warning",
+                    f"Reidentification range is {reident_range} " \
+                    "which is past the recommended limit of 1000000 for normal reidentification, " \
+                    "results may be inaccurate. Continue?")
+                if not cont:
+                    return
             _, \
             observed_intervals, \
             offset_time = rngtool.tracking_blink(self.player_eye,
@@ -594,7 +639,11 @@ class PlayerBlinkGUI(tk.Frame):
                 self.rng, adv = rngtool.reidentiy_by_intervals(Xorshift(*state),
                                                               observed_intervals,
                                                               return_advance=True,
-                                                              npc=self.config_json["npc"])
+                                                              npc=self.config_json["npc"],
+                                                              search_min= \
+                                                                  int(self.reident_min.get()),
+                                                              search_max= \
+                                                                  int(self.reident_max.get()))
             except TypeError as failed_deduction:
                 raise Exception("Failed to reidentify from the recorded blinks.") \
                     from failed_deduction
@@ -627,6 +676,9 @@ class PlayerBlinkGUI(tk.Frame):
                 break
 
             self.advances += self.config_json["npc"]+1
+            if self.advances == int(self.keypress_advance.get()):
+                press("pgup")
+                print("Pressing pgup")
             rand = self.rng.get_next_rand_sequence(self.config_json["npc"]+1)[-1]
             waituntil += 1.018
 
