@@ -661,8 +661,8 @@ class PlayerBlinkGUI(tk.Frame):
             if reident_range > 1000000:
                 cont = tk.messagebox.askyesno("Warning",
                     f"Reidentification range is {reident_range} " \
-                    "which is past the recommended limit of 1000000 (1m) for normal reidentification, " \
-                    "results may be inaccurate. Continue?")
+                    "which is past the recommended limit of 1000000 (1m) for normal " \
+                    "reidentification, results may be inaccurate. Continue?")
                 if not cont:
                     return
             _, \
