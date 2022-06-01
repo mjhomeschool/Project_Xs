@@ -51,7 +51,10 @@ class PlayerBlinkGUI(tk.Frame):
         "pokemon_npc": 0,
         "crop": [0, 0, 0, 0],
         "camera": 0,
-        "display_percent": 80
+        "display_percent": 80,
+        "reident_1_pk_npc": False,
+        "final_a_press_delay": 84,
+        "timeline_buffer": 110,
         }
     def __init__(self, master=None):
         super().__init__(master)
@@ -74,6 +77,7 @@ class PlayerBlinkGUI(tk.Frame):
         self.tracking = False
         self.advances = 0
         self.count_down = 0
+        self.timeline_start = 0
         self.config_json = {}
         self.config_jsons = []
         self.pack()
@@ -98,6 +102,27 @@ class PlayerBlinkGUI(tk.Frame):
         ttk.Label(self,text="Timer:").grid(column=0,row=11)
         ttk.Label(self,text="X to Advance:").grid(column=0,row=12)
         ttk.Label(self,text="Keypress Advance:").grid(column=0,row=14)
+        ttk.Label(self,text="Display Percent").grid(column=0,row=15)
+
+        self.auto_timeline_check_var = tk.IntVar()
+        self.auto_timeline_check = ttk.Checkbutton(self, text="Auto Timeline", \
+            variable=self.auto_timeline_check_var)
+        self.auto_timeline_check.grid(column=0,row=17,columnspan=2)
+        ttk.Label(self,text="Target Advances:").grid(column=0,row=18)
+        self.target_advances = tk.Spinbox(self, from_= 0, to = 99999, width = 20)
+        self.target_advances.grid(column=1,row=18)
+        ttk.Label(self,text="Final A-Press Delay:").grid(column=0,row=19)
+        self.final_a_press_delay = tk.Spinbox(self, from_= 0, to = 99999, width = 20)
+        self.final_a_press_delay.grid(column=1,row=19)
+        ttk.Label(self,text="Timeline Buffer:").grid(column=0,row=20)
+        self.timeline_buffer = tk.Spinbox(self, from_= 0, to = 99999, width = 20)
+        self.timeline_buffer.grid(column=1,row=20)
+        ttk.Label(self,text="Timeline Starts at:").grid(column=0,row=21)
+        self.timeline_start_label = ttk.Label(self,text=self.timeline_start)
+        self.timeline_start_label.grid(column=1,row=21)
+        ttk.Label(self,text="Press A at:").grid(column=0,row=22)
+        self.press_a_label = ttk.Label(self,text=0)
+        self.press_a_label.grid(column=1,row=22)
 
         self.progress = ttk.Label(self,text="0/0")
         self.progress.grid(column=1,row=0)
@@ -241,7 +266,6 @@ class PlayerBlinkGUI(tk.Frame):
         self.keypress_advance = tk.Spinbox(self, from_ = 0, to = 999999)
         self.keypress_advance.grid(column=1,row=14)
 
-        ttk.Label(self,text="Display Percent").grid(column=0,row=15)
         self.display_percent = tk.Spinbox(self, from_ = 0, to = 500)
         self.display_percent.grid(column=1,row=15)
 
@@ -275,6 +299,11 @@ class PlayerBlinkGUI(tk.Frame):
         self.keypress_advance.insert(0, -1)
         self.display_percent.delete(0, tk.END)
         self.display_percent.insert(0, 100)
+        self.final_a_press_delay.delete(0, tk.END)
+        self.final_a_press_delay.insert(0, 0)
+        self.timeline_buffer.delete(0, tk.END)
+        self.timeline_buffer.insert(0, 0)
+        self.reident_noisy_check_var.set(False)
 
         self.after_task()
 
@@ -294,7 +323,10 @@ class PlayerBlinkGUI(tk.Frame):
     def save_screenshot(self):
         """Save a raw screenshot of the current output for cropping an eye image"""
         with fd.asksaveasfile(initialdir="./", filetypes=[("PNG", ".png")]) as file:
-            cv2.imwrite(file.name,self.raw_screenshot)
+            name = file.name
+            if not name.endswith(".png"):
+                name += ".png" # why doesnt filedialogue do this automatically?
+            cv2.imwrite(name,self.raw_screenshot)
 
     def new_eye(self):
         """Select a new eye image"""
@@ -361,6 +393,11 @@ class PlayerBlinkGUI(tk.Frame):
         self.monitor_window_var.set(self.config_json["MonitorWindow"])
         self.display_percent.delete(0, tk.END)
         self.display_percent.insert(0, self.config_json["display_percent"])
+        self.final_a_press_delay.delete(0, tk.END)
+        self.final_a_press_delay.insert(0, self.config_json["final_a_press_delay"])
+        self.timeline_buffer.delete(0, tk.END)
+        self.timeline_buffer.insert(0, self.config_json["timeline_buffer"])
+        self.reident_noisy_check_var.set(self.config_json["reident_1_pk_npc"])
 
     def stop_tracking(self):
         """Set tracking to False"""
@@ -490,6 +527,10 @@ class PlayerBlinkGUI(tk.Frame):
             self.count_down = 10
             while queue and self.tracking:
                 self.advances += 1
+                if self.auto_timeline_check_var.get() \
+                  and self.advances == self.timeline_start:
+                    self.timelining = True
+                    print("Auto starting timeline")
                 if self.advances == int(self.keypress_advance.get()):
                     press("pgup")
                     print("Pressing pgup")
@@ -587,7 +628,7 @@ class PlayerBlinkGUI(tk.Frame):
             if reident_range > 100000:
                 cont = tk.messagebox.askyesno("Warning",
                     f"Reidentification range is {reident_range} " \
-                    "which is past the recommended limit of 100000 for 1 PK NPC, " \
+                    "which is past the recommended limit of 100000 (100k) for 1 PK NPC, " \
                     "results may be inaccurate. Continue?")
                 if not cont:
                     return
@@ -620,7 +661,7 @@ class PlayerBlinkGUI(tk.Frame):
             if reident_range > 1000000:
                 cont = tk.messagebox.askyesno("Warning",
                     f"Reidentification range is {reident_range} " \
-                    "which is past the recommended limit of 1000000 for normal reidentification, " \
+                    "which is past the recommended limit of 1000000 (1m) for normal reidentification, " \
                     "results may be inaccurate. Continue?")
                 if not cont:
                     return
@@ -676,6 +717,10 @@ class PlayerBlinkGUI(tk.Frame):
                 break
 
             self.advances += self.config_json["npc"]+1
+            if self.auto_timeline_check_var.get() \
+              and self.advances == self.timeline_start:
+                self.timelining = True
+                print("Auto starting timeline")
             if self.advances == int(self.keypress_advance.get()):
                 press("pgup")
                 print("Pressing pgup")
@@ -839,7 +884,14 @@ class PlayerBlinkGUI(tk.Frame):
         self.config_json["MonitorWindow"] = bool(self.monitor_window_var.get())
         self.config_json["camera"] = int(self.camera_index.get())
         self.config_json["display_percent"] = int(self.display_percent.get())
+        self.config_json["reident_1_pk_npc"] = bool(self.reident_noisy_check_var.get())
+        self.config_json["final_a_press_delay"] = int(self.final_a_press_delay.get())
+        self.config_json["timeline_buffer"] = int(self.timeline_buffer.get())
         self.adv['text'] = self.advances
+        self.timeline_start = int(self.target_advances.get()) - int(self.timeline_buffer.get())
+        self.timeline_start_label['text'] = self.timeline_start
+        self.press_a_label['text'] = int(self.target_advances.get()) \
+            - int(self.final_a_press_delay.get())
         self.count_down_label['text'] = self.count_down
         self.after(100,self.after_task)
 
