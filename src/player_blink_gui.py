@@ -159,12 +159,15 @@ class PlayerBlinkGUI(tk.Frame):
         self.monitor_blink_button = ttk.Button(self, text="Monitor Blinks", \
             command=self.monitor_blinks)
         self.monitor_blink_button.grid(column=5,row=0)
+        self.monitor_blink_button.config(state=tk.DISABLED)
 
         self.reidentify_button = ttk.Button(self, text="Reidentify", command=self.reidentify)
         self.reidentify_button.grid(column=5,row=1)
+        self.reidentify_button.config(state=tk.DISABLED)
 
         self.preview_button = ttk.Button(self, text="Preview", command=self.preview)
         self.preview_button.grid(column=5,row=2)
+        self.preview_button.config(state=tk.DISABLED)
 
         self.stop_tracking_button = ttk.Button(self, text="Stop Tracking", \
             command=self.stop_tracking)
@@ -337,6 +340,9 @@ class PlayerBlinkGUI(tk.Frame):
         self.player_eye_tk = self.cv_image_to_tk(self.player_eye)
         self.eye_display['image'] = self.player_eye_tk
 
+        self.monitor_blink_button.config(state=tk.NORMAL)
+        self.enable_preview()
+
     def save_config(self):
         """Save current settings to the selected config file"""
         with open(join("configs",self.config_combobox.get()),"w",encoding="utf-8") as file:
@@ -399,6 +405,9 @@ class PlayerBlinkGUI(tk.Frame):
         self.timeline_buffer.insert(0, self.config_json["timeline_buffer"])
         self.reident_noisy_check_var.set(self.config_json["reident_1_pk_npc"])
 
+        self.monitor_blink_button.config(state=tk.NORMAL)
+        self.enable_preview()
+
     def stop_tracking(self):
         """Set tracking to False"""
         self.tracking = False
@@ -416,8 +425,22 @@ class PlayerBlinkGUI(tk.Frame):
             self.monitoring_thread.daemon = True
             self.monitoring_thread.start()
         else:
-            self.monitor_blink_button['text'] = "Monitor Blinks"
-            self.monitoring = False
+            self.stop_monitor_blinks()
+
+    def stop_monitor_blinks(self):
+        self.monitor_blink_button['text'] = "Monitor Blinks"
+        self.monitoring = False
+
+        self.enable_preview()
+        self.enable_reidentify()
+
+        self.preview()
+
+    def enable_monitor_blinks(self):
+        self.monitor_blink_button.config(state=tk.NORMAL)
+
+    def disable_monitor_blinks(self):
+        self.monitor_blink_button.config(state=tk.DISABLED)
 
     def reidentify(self):
         """Start monitoring 7/20 blinks to deduce current advance based on entered state"""
@@ -428,8 +451,25 @@ class PlayerBlinkGUI(tk.Frame):
             self.reidentifying_thread.daemon = True
             self.reidentifying_thread.start()
         else:
-            self.reidentify_button['text'] = "Reidentify"
-            self.reidentifying = False
+            self.stop_reidentify()
+
+    def stop_reidentify(self):
+        self.reidentify_button['text'] = "Reidentify"
+        self.reidentifying = False
+
+        self.enable_preview()
+        self.enable_monitor_blinks()
+
+        self.preview()
+
+    def enable_reidentify(self):
+        seeds = self.s0_1_2_3.get(1.0,tk.END)
+        
+        if len(seeds) > 1:
+            self.reidentify_button.config(state=tk.NORMAL)
+
+    def disable_reidentify(self):
+        self.reidentify_button.config(state=tk.DISABLED)
 
     def tidsid(self):
         """Start monitoring 64 munchlax blinks to deduce current state for tid/sid rng"""
@@ -447,6 +487,10 @@ class PlayerBlinkGUI(tk.Frame):
     # as this function handles both monitoring and setting up timelines
     # the amount of branches is fair
     def monitoring_work(self):
+        self.stop_preview()
+        self.disable_preview()
+        self.disable_reidentify()
+
         """Thread work to be for the monitoring function"""
         self.tracking = False
         blinks, \
@@ -467,6 +511,9 @@ class PlayerBlinkGUI(tk.Frame):
         self.monitor_blink_button['text'] = "Monitor Blinks"
         self.monitoring = False
         self.preview()
+
+        self.enable_preview()
+        self.enable_reidentify()
 
         waituntil = time.perf_counter()
         diff = round(waituntil-offset_time)
@@ -560,6 +607,8 @@ class PlayerBlinkGUI(tk.Frame):
             self.timelining = False
 
     def tidsiding_work(self):
+        self.stop_preview()
+
         """Thread work to be done for the tidsid function"""
         self.tracking = False
         munchlax_intervals \
@@ -612,8 +661,13 @@ class PlayerBlinkGUI(tk.Frame):
         try:
             state = [int(x,16) for x in self.s0_1_2_3.get(1.0,tk.END).split("\n")[:4]]
         except ValueError as bad_input:
+            self.stop_reidentify()
             raise Exception("Cannot pull seeds from S[0-3] for reidentification, " \
                             "make sure they are in hex and split by line.") from bad_input
+
+        self.stop_preview()
+        self.disable_preview()
+        self.disable_monitor_blinks()
 
         print(f"{state[0]:08X}{state[1]:08X} {state[2]:08X}{state[3]:08X}")
         print(f"{state[0]:08X} {state[1]:08X} {state[2]:08X} {state[3]:08X}")
@@ -692,6 +746,9 @@ class PlayerBlinkGUI(tk.Frame):
         self.reidentify_button['text'] = "Reidentify"
         self.reidentifying = False
         self.preview()
+
+        self.enable_preview()
+        self.enable_monitor_blinks()
 
         waituntil = time.perf_counter()
         diff = round(waituntil-offset_time)
@@ -785,8 +842,18 @@ class PlayerBlinkGUI(tk.Frame):
             self.previewing_thread.daemon = True
             self.previewing_thread.start()
         else:
+            self.stop_preview()
+
+    def stop_preview(self):
+        if self.previewing:
             self.preview_button['text'] = "Preview"
             self.previewing = False
+
+    def enable_preview(self):
+        self.preview_button.config(state=tk.NORMAL)
+
+    def disable_preview(self):
+        self.preview_button.config(state=tk.DISABLED)
 
     # pylint: disable=too-many-locals
     # previewing live updates at any setting change
