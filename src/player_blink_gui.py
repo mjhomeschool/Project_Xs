@@ -529,6 +529,7 @@ class PlayerBlinkGUI(tk.Frame):
 
         self.s0_1_2_3.insert(1.0,f"{state[0]:08X}\n{state[1]:08X}\n{state[2]:08X}\n{state[3]:08X}")
         self.s01_23.insert(1.0,f"{state[0]:08X}{state[1]:08X}\n{state[2]:08X}{state[3]:08X}")
+        self.enable_reidentify()
 
         self.advances = (1 if self.menu_check_var.get() else 0)
         self.tracking = True
